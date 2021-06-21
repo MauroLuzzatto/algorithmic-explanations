@@ -1,5 +1,7 @@
 # Algorithmic Explanations (WIP)
 
+> work in progress
+
 This project generates explanations of the trained machine learning model. The following steps are included:
 - cleaning of data and encoding of the features
 - training and tuning a machine learning model (XGBoost)
