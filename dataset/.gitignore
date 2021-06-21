@@ -1,0 +1,8 @@
+data/*
+output/*
+plot/*
+source/*
+_archive/*
+training/*
+ratings/*
+*.pkl
