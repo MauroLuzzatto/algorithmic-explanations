@@ -1,7 +1,7 @@
 # explainy
 
 
-![explainy logo](/resources/logo.png)
+![explainy logo](resources/logo.png)
 
 
 ## Overview
