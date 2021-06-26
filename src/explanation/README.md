@@ -1,8 +1,6 @@
 # explainy
 
-
-![explainy logo](resources/logo.png)
-
+<img align="right" src="resources/logo.png" alt="logo" width="300"/>
 
 ## Overview
 
