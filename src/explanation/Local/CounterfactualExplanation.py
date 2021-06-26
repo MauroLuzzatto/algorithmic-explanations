@@ -93,7 +93,6 @@ class CounterfactualExplanation(ExplanationBase):
             x_counter_factual (TYPE): DESCRIPTION.
 
         """
-
         x_ref = self.X.values[sample, :]
 
         x_counter_factual = create_counterfactual(
@@ -105,10 +104,8 @@ class CounterfactualExplanation(ExplanationBase):
             lammbda=lammbda,
             random_seed=0,
         )
-
         # TODO: post-process one-hot or categorial features to be descrete
         self.log_output(sample, x_ref, x_counter_factual)
-
         return x_ref, x_counter_factual
 
     def log_output(self, sample, x_ref, x_counter_factual):
@@ -129,6 +126,26 @@ class CounterfactualExplanation(ExplanationBase):
             )
         )
 
+    def get_prediction_from_new_value(self, ii, x_ref, x_counter_factual):
+        """
+        replace the value of the feauture at postion ii and predict
+        a new value for this new set of features        
+
+        Args:
+            ii (TYPE): DESCRIPTION.
+            x_ref (TYPE): DESCRIPTION.
+            x_counter_factual (TYPE): DESCRIPTION.
+
+        Returns:
+            difference (TYPE): DESCRIPTION.
+
+        """
+        x_created = x_ref.reshape(1, -1).copy()
+        # assign new value
+        x_created[0, ii] = x_counter_factual.reshape(1, -1)[0, ii]
+        pred_new = self.model.predict(x_created)[0]
+        return pred_new
+        
     def get_feature_importance(self, x_ref, x_counter_factual):
         """
         Calculate the importance of each feature. Take the reference
@@ -145,19 +162,21 @@ class CounterfactualExplanation(ExplanationBase):
             None.
         """
         pred_ref = self.model.predict(x_ref.reshape(1, -1))[0]
-        self.difference = []
+        self.differences = []
         for ii in range(x_ref.shape[0]):
-            x_created = x_ref.reshape(1, -1).copy()
-            # assign new value
-            x_created[0, ii] = x_counter_factual.reshape(1, -1)[0, ii]
-            pred_new = self.model.predict(x_created)[0]
-            self.difference.append(pred_new - pred_ref)
+           
+            pred_new = self.get_prediction_from_new_value(
+                ii, x_ref, x_counter_factual
+            )
+            
+            difference = pred_new - pred_ref
+            self.differences.append(difference)            
             self.logger.debug(
-                "{} -- {}".format(self.feature_names[ii], self.difference[ii])
+                "{} -- {}".format(self.feature_names[ii], self.differences[ii])
             )
         # get the sorted feature_names
         self.feature_sort = np.array(self.feature_names)[
-            np.array(self.difference).argsort()[::-1]
+            np.array(self.differences).argsort()[::-1]
         ].tolist()
 
     def get_feature_values(self, x_ref, x_counter_factual, decimal=2):
@@ -175,7 +194,7 @@ class CounterfactualExplanation(ExplanationBase):
         """
         self.df = (
             pd.DataFrame(
-                [x_ref, x_counter_factual, self.difference],
+                [x_ref, x_counter_factual, self.differences],
                 index=[
                     "Reference Values",
                     "Counter Factual Values",

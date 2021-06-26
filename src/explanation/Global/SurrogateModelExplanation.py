@@ -11,8 +11,8 @@ import pandas as pd
 from sklearn.tree import DecisionTreeRegressor
 
 from explanation.ExplanationBase import ExplanationBase
-from explanation.SurrogatePlot import SurrogatePlot
-from explanation.SurrogateText import SurrogateText
+from explanation.Global.SurrogatePlot import SurrogatePlot
+from explanation.Global.SurrogateText import SurrogateText
 
 
 class SurrogateModelExplanation(ExplanationBase):

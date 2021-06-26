@@ -1,5 +1,6 @@
 # from src.explanation.ExplanationBase import Explanation
-from explanation.CounterfactualExplanation import CounterfactualExplanation
-from explanation.PermutationExplanation import PermutationExplanation
-from explanation.ShapleyExplanation import ShapleyExplanation
-from explanation.SurrogateModelExplanation import SurrogateModelExplanation
+from explanation.Local.ShapleyExplanation import ShapleyExplanation
+from explanation.Local.CounterfactualExplanation import CounterfactualExplanation
+
+from explanation.Global.PermutationExplanation import PermutationExplanation
+from explanation.Global.SurrogateModelExplanation import SurrogateModelExplanation
