@@ -1,6 +1,6 @@
-# explainy
+# explainy - Machine Learning explanations for humans
 
-<img align="right" src="resources/logo.png" alt="logo" width="300"/>
+<img align="right" src="resources/logo.png" alt="logo" width="200"/>
 
 ## Overview
 
