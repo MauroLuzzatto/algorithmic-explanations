@@ -34,6 +34,7 @@ from sklearn.pipeline import Pipeline
 from xgboost import XGBRegressor  # type: ignore
 
 from src.model.utils import create_folder, get_dataset
+from src.model.config import path_base
 
 
 class ModelClass(object):
@@ -376,10 +377,8 @@ cv_settings = {
 
 if __name__ == "__main__":
 
-    path_base = (
-        r"C:\Users\maurol\OneDrive\Dokumente\Python_Scripts\model_explanation_study"
-    )
-    path_load = os.path.join(path_base, r"dataset\training")
+   
+    path_load = os.path.join(path_base, r"dataset", "training")
     path_model = os.path.join(path_base, r"model")
 
     name = "training_data_v2.csv"

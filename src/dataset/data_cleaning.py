@@ -5,13 +5,14 @@ Created on Fri May 28 20:49:31 2021
 @author: maurol
 """
 
-path = r"C:\Users\maurol\OneDrive\Dokumente\Python_Scripts\model_explanation_study\dataset\training"
+path = r"C:\Users\maurol\OneDrive\Dokumente\Python_Scripts\algorithmic-explanations\dataset\training"
 file = "applications-website-up-to-20April-clean.csv"
 
 
 import os
 from datetime import datetime
 
+import numpy as np
 import pandas as pd
 
 
@@ -42,8 +43,7 @@ df["extracurriculars"] = df["extracurriculars"].apply(replace_line_break)
 df["leadership"] = df["leadership"].apply(replace_line_break)
 df["major"] = df["major"].apply(replace_line_break)
 
-import numpy as np
-import pandas as pd
+
 
 
 def get_rank_bins(rank):

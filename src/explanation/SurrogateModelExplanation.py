@@ -40,9 +40,20 @@ class SurrogateModelExplanation(ExplanationBase):
         self.feature_names = list(X)
         self.model = model
         self.num_features = self.sparse_to_num_features()
+        
+        self.natural_language_text_empty = (
+            "Applicants received an average score of {:.2f} if the value of {}"
+        )
+        
+        self.method_text_empty = (
+            "To help you understand this decision, here is a decision tree "
+            "showing you how the mechanism made its decision:"
+        )
 
-        self.plot_name = f"surrogate_{bool(self.sparse)}.png"
-        self.logger = self.setup_logger("surrogate")
+        self.explanation_name = "surrogate"
+        self.logger = self.setup_logger(self.explanation_name)
+        self.plot_name = self.get_plot_name()
+
         self.precision = 2
         self.num_features = 2
         if sparse:
@@ -96,10 +107,7 @@ class SurrogateModelExplanation(ExplanationBase):
         Returns:
             None.
         """
-        self.method_text = (
-            "To help you understand this decision, here is a decision tree "
-            "showing you how the mechanism made its decision:"
-        )
+        return self.method_text_empty
 
     def get_natural_language_text(self):
         """
@@ -109,11 +117,8 @@ class SurrogateModelExplanation(ExplanationBase):
         Returns:
             None.
         """
-        natural_language_text = (
-            "Applicants received an average score of {:.2f} if the value of {}"
-        )
         surrogateText = SurrogateText(
-            text=natural_language_text,
+            text= self.natural_language_text_empty,
             model=self.surrogate_model,
             X=self.X,
             feature_names=self.feature_names,
@@ -128,8 +133,8 @@ class SurrogateModelExplanation(ExplanationBase):
             None.
         """
         self.calculate_explanation()
-        self.natural_language_output = self.get_natural_language_text()
-        self.get_method_text()
+        self.natural_language_text = self.get_natural_language_text()
+        self.method_text = self.get_method_text()
         self.plot()
 
     def main(self, sample):
@@ -143,10 +148,9 @@ class SurrogateModelExplanation(ExplanationBase):
         Returns:
             None.
         """
-        print(self.method_text)
-        print(self.natural_language_output)
         self.get_prediction(sample)
         self.save_csv(sample)
+        return self.method_text, self.natural_language_text
 
 
 if __name__ == "__main__":

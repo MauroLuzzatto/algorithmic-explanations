@@ -49,7 +49,8 @@ class ShapleyExplanation(ExplanationBase):
         self.feature_names = list(X)
         self.model = model
         self.num_features = self.sparse_to_num_features()
-        self.logger = self.setup_logger("shapely")
+        self.explanation_name = 'shapely'
+        self.logger = self.setup_logger(self.explanation_name)
 
     def calculate_explanation(self) -> None:
         """
@@ -186,20 +187,15 @@ class ShapleyExplanation(ExplanationBase):
         self.calculate_explanation()
         feature_values = self.get_feature_values(sample)
 
-        values = self.get_natural_language_text(feature_values)
-        self.natural_language_output = self.natural_language_text.format(
-            self.num_to_str[len(feature_values)], values
-        )
+        self.natural_language_text = self.get_natural_language_text(feature_values)
+        self.method_text = self.get_method_text(feature_values)
 
-        self.get_method_text(feature_values)
-        print(self.method_text)
-        print(self.natural_language_output)
-
-        self.plot_name = f"shapely_{sample}_{bool(self.sparse)}.png"
+        self.plot_name = self.get_plot_name(sample)
         self.plot(sample)
         self.get_prediction(sample)
         self.save_csv(sample)
         self.log_output(sample)
+        return self.method_text, self.natural_language_text
 
 
 if __name__ == "__main__":

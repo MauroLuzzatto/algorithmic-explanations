@@ -14,10 +14,6 @@ class LoggerClass:
     Logger class to log to a file and console output
     """
 
-    # def __init__(path_save=None, stage='training'):
-    #     self.path_save = path_save
-    #     self.stage = stage
-
     def setup(self, path_save, stage="training"):
         """
         Create a log file to record the experiment's logs

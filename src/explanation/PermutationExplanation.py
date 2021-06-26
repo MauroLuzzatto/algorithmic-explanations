@@ -58,8 +58,10 @@ class PermutationExplanation(ExplanationBase):
 
         self.feature_names = list(X)
         self.num_features = self.sparse_to_num_features()
-        self.logger = self.setup_logger("permutation")
-        self.plot_name = f"permutation_{bool(self.sparse)}.png"
+        
+        self.explanation_name = "permutation"
+        self.logger = self.setup_logger(self.explanation_name)
+        self.plot_name = self.get_plot_name()
 
         self.setup()
 
@@ -162,13 +164,8 @@ class PermutationExplanation(ExplanationBase):
         """
         self.calculate_explanation()
         feature_values = self.get_feature_values()
-
-        values = self.get_natural_language_text(feature_values)
-        self.natural_language_output = self.natural_language_text.format(
-            self.num_to_str[len(feature_values)], values
-        )
-
-        self.get_method_text(feature_values)
+        self.natural_language_text = self.get_natural_language_text(feature_values)
+        self.method_text = self.get_method_text(feature_values)
         self.plot()
 
     def main(self, sample):
@@ -183,11 +180,9 @@ class PermutationExplanation(ExplanationBase):
             None.
         """
 
-        print(self.method_text)
-        print(self.natural_language_output)
-
         self.get_prediction(sample)
         self.save_csv(sample)
+        return self.method_text, self.natural_language_text
 
 
 if __name__ == "__main__":

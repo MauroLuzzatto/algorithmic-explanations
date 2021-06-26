@@ -8,12 +8,14 @@ Created on Mon May 24 09:20:17 2021
 import os
 from collections import defaultdict
 
-import matplotlib.pyplot as plt
 import pandas as pd
 
-folder_name = "Algo_explanations"
+from src.model.config import path_base
 
-path_ratings = r"C:\Users\maurol\OneDrive\Dokumente\Python_Scripts\model_explanation_study\dataset\ratings"
+
+folder_name = "algorithmic_explanations"
+
+path_ratings = os.path.join(path_base, 'dataset', 'ratings')
 path_save = os.path.join(path_ratings, r"post_processed")
 
 meta_columns = [

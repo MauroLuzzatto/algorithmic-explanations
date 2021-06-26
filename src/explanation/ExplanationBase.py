@@ -6,6 +6,7 @@ Created on Tue Nov 24 21:15:30 2020
 """
 
 import os
+import csv
 from typing import Dict
 
 import pandas as pd
@@ -36,12 +37,12 @@ class ExplanationBase(ExplanationMixin):
         self.setup_paths()
         self.get_number_to_string_dict()
 
-        self.natural_language_text = (
+        self.natural_language_text_empty = (
             "In your case, the {} features which "
-            "contributed most to the mechanism’s "
-            "decision were the features {}."
+            "contributed most to the mechanism`s "
+            "decision were {}."
         )
-        self.method_text = (
+        self.method_text_empty = (
             "To help you understand this decision, here are "
             "the {} features which were most important for "
             "how the mechanism made its decision in your specific case:"
@@ -103,11 +104,11 @@ class ExplanationBase(ExplanationMixin):
         Returns:
             None
         """
-        self.method_text = self.method_text.format(self.num_to_str[len(feature_values)])
+        return self.method_text_empty.format(self.num_to_str[len(feature_values)])
 
-    def get_natural_language_text(self, feature_values: list) -> None:
+    def get_sentences(self, feature_values: list) -> None:
         """
-        Generate the output of the explanation in natural language.
+        Generate the output sentences
 
         Args:
             feature_values -> list(tuple(name, value))
@@ -122,9 +123,30 @@ class ExplanationBase(ExplanationMixin):
             value = sentence.format(feature_name, feature_value)
             values.append(value)
 
-        values = self.join_text_with_comma_and_and(values)
+        sentences = self.join_text_with_comma_and_and(values)
+        return sentences
+    
+    def get_natural_language_text(self, feature_values):
+        """
+        Generate the output of the explanation in natural language.
 
-        return values
+        Returns:
+            TYPE: DESCRIPTION.
+
+        """
+        
+        sentences = self.get_sentences(feature_values)
+        return self.natural_language_text_empty.format(
+            self.num_to_str[len(feature_values)], sentences
+        )
+    
+    def get_plot_name(self, sample=None):
+        
+        if sample:
+            plot_name = f"{self.explanation_name}_sample_{sample}_sparse_{bool(self.sparse)}.png"
+        else:
+            plot_name = f"{self.explanation_name}_sparse_{bool(self.sparse)}.png"
+        return plot_name
 
     def save_csv(self, sample: int) -> None:
         """
@@ -141,14 +163,14 @@ class ExplanationBase(ExplanationMixin):
         """
         assert hasattr(self, "method_text"), "instance lacks method_text"
         assert hasattr(
-            self, "natural_language_output"
+            self, "natural_language_text"
         ), "instance lacks natural_language_text"
         assert hasattr(self, "plot_name"), "instance lacks plot_name"
         assert hasattr(self, "prediction"), "instance lacks prediction"
 
         output = {
             "method": self.method_text,
-            "explanation": self.natural_language_output,
+            "explanation": self.natural_language_text,
             "plot": self.plot_name,
             "sparse": self.sparse,
             "prediction": self.prediction,
@@ -156,22 +178,11 @@ class ExplanationBase(ExplanationMixin):
 
         df = pd.DataFrame(output, index=[sample])
 
-        # def add_double_quotes(string):
-        #     return f"'{string}'"
 
-        # df['method'] = df['method'].apply(add_double_quotes)
-        # df['explanation'] = df['explanation'].apply(add_double_quotes)
+        for column in ['method', 'explanation']:
 
-        df["explanation"] = df["explanation"].astype(str)
-        df["method"] = df["explanation"].astype(str)
-
-        # df['method'] = df['method'].str.replace(',', '[comma]')
-        # df['explanation'] = df['explanation'].str.replace(',', '[comma]')
-
-        df["method"] = df["method"].str.replace("\n", "\\n")
-        df["explanation"] = df["explanation"].str.replace("\n", "\\n")
-
-        import csv
+            df[column] = df[column].astype(str)
+            df[column] = df[column].str.replace("\n", "\\n")
 
         # check if the file is already there, if not, create it
         if not os.path.isfile(os.path.join(self.path_result, self.file_name)):

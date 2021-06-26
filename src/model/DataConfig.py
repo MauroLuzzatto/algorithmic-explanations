@@ -10,6 +10,7 @@ import os
 import pandas as pd
 
 from src.model.utils import get_column_selection
+from src.model.config import path_base
 
 
 class DataConfig(object):
@@ -33,31 +34,34 @@ class DataConfig(object):
         data_config = {}
         data_config["dataset"] = dataset_name
 
-        targets_1 = ["academic"]
-        features_1 = [
+        targets_academic = ["academic"]
+        features_academic = [
             "SAT",
             "ACT",
             "GPA",
             "Major",
             "Grade",
             "College rank",
-            "Favorite subjects",
+            "Favorite subject",
         ]
-        targets_2 = ["extracurricular.player"]
-        features_2 = ["Number of"]
-        targets_3 = ["democraphic"]
-        features_3 = ["Age", "Gender - ", "Ethnicity - ", "State of residence"]
-        targets = targets_1 + targets_2 + targets_3 + ["essay.player"]
-        features = features_1 + features_2 + features_3 + ["Essay score"]
-
-        data_config["academic"] = get_column_selection(targets_1, features_1, columns)
-        data_config["extracurricular"] = get_column_selection(
-            targets_2, features_2, columns
+        
+        data_config["academic"] = get_column_selection(
+            targets_academic, features_academic, columns
         )
+        
+        targets_democraphic = ["democraphic"]
+        features_democraphic = ["Age", "Gender - ", "Ethnicity - ", "State of residence"]
+        
         data_config["democraphic"] = get_column_selection(
-            targets_3, features_3, columns
+            targets_democraphic, features_democraphic, columns
         )
-        data_config["all"] = get_column_selection(targets, features, columns)
+        
+        targets_all = targets_academic + targets_democraphic + ["essay.player"] +  ["extracurricular.player"]
+        features_all = features_academic + features_democraphic + ["Essay score"] + ["Number of"]
+        
+        data_config["all"] = get_column_selection(
+            targets_all, features_all, columns
+        )
         return data_config
 
     def load_config(self):
@@ -72,3 +76,14 @@ class DataConfig(object):
             os.path.join(self.path_config, "data_config.json"), "w", encoding="utf-8"
         ) as f:
             json.dump(data_config, f, ensure_ascii=False, indent=4)
+
+if __name__ == "__main__":
+    
+    path_load = os.path.join(path_base, "dataset", "training")
+    path_config = os.path.join(path_base, "src", "resources")
+    dataset_name = r"applications-website-up-to-20April-clean.csv_postprocessed.csv"
+    
+    data = DataConfig(path_config)
+    data_config = data.create_data_config(path_load, dataset_name)
+
+

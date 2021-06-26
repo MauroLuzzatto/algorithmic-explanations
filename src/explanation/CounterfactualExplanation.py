@@ -58,6 +58,16 @@ class CounterfactualExplanation(ExplanationBase):
         """
         self.X = X
         self.y = y
+        
+        self.natural_language_text_empty = (
+            "In your case, the mechanism would have awarded you the scholarship, {}."
+        )
+        
+        self.method_text_empty = (
+            "To help you understand this decision, "
+            "here is an example of another, similar applicant where the "
+            "mechanism would have decided differently:"
+        )
 
         if y_desired is None:
             y_desired = y.values.max()
@@ -67,7 +77,8 @@ class CounterfactualExplanation(ExplanationBase):
 
         self.feature_names = list(X)
         self.num_features = self.sparse_to_num_features()
-        self.logger = self.setup_logger("counterfactual")
+        self.explanation_name = "counterfactual"
+        self.logger = self.setup_logger(self.explanation_name)
 
     def calculate_explanation(self, sample=0, lammbda=1.0):
         """
@@ -177,6 +188,36 @@ class CounterfactualExplanation(ExplanationBase):
         )
         # reorder dataframe according the the feature importance
         self.df = self.df.loc[self.feature_sort, :]
+        
+        
+    def format_features_for_plot(self):
+        """
+        - map categorical variables
+        - replace one-hot-encoded value with True, False strings
+
+        Returns:
+            None.
+
+        """
+        for feature_name in list(self.df.index)[: self.num_features]:
+            for col_name in ["Reference Values", "Counter Factual Values"]:
+                
+                feature_value = self.df.loc[feature_name, col_name]
+                self.df.loc[feature_name, col_name] = self.map_category(
+                    feature_name, feature_value
+                )
+    
+                # replace one-hot-encoded value with True, False strings
+                if " - " in feature_name:
+                    self.logger.debug(
+                        f"{feature_name}, {col_name}, {self.df.loc[feature_name, col_name]}"
+                    )
+                    if self.df.loc[feature_name, col_name] == 1.0:
+                        string = "True"
+                    else:
+                        string = "False"
+    
+                    self.df.loc[feature_name, col_name] = string
 
     def plot(self, sample):
         """
@@ -193,27 +234,7 @@ class CounterfactualExplanation(ExplanationBase):
         ax.axis("off")
         ax.axis("tight")
 
-        # map categorical variables
-        for feature_name in list(self.df.index)[: self.num_features]:
-
-            for col_name in ["Reference Values", "Counter Factual Values"]:
-                feature_value = self.df.loc[feature_name, col_name]
-
-                self.df.loc[feature_name, col_name] = self.map_category(
-                    feature_name, feature_value
-                )
-
-                # replace one-hot-encoded value with True, False strings
-                if " - " in feature_name:
-                    self.logger.debug(
-                        f"{feature_name}, {col_name}, {self.df.loc[feature_name, col_name]}"
-                    )
-                    if self.df.loc[feature_name, col_name] == 1.0:
-                        string = "True"
-                    else:
-                        string = "False"
-
-                    self.df.loc[feature_name, col_name] = string
+        self.format_features_for_plot()
 
         table = ax.table(
             cellText=self.df[["Reference Values", "Counter Factual Values"]].values[
@@ -255,11 +276,7 @@ class CounterfactualExplanation(ExplanationBase):
         Returns:
             None.
         """
-        self.method_text = (
-            "To help you understand this decision, "
-            "here is an example of another, similar applicant where the "
-            "mechanism would have decided differently:"
-        )
+        return self.method_text_empty
 
     def get_natural_language_text(self):
         """
@@ -272,9 +289,6 @@ class CounterfactualExplanation(ExplanationBase):
         feature_values = self.df["Counter Factual Values"].tolist()[: self.num_features]
         feature_names = list(self.df.index)[: self.num_features]
 
-        self.natural_language_text = (
-            "In your case, the mechanism would have awarded you the scholarship, {}."
-        )
         sentence = "if your '{}' was {}"
 
         sentences = []
@@ -334,19 +348,14 @@ class CounterfactualExplanation(ExplanationBase):
         self.get_feature_importance(x_ref, x_counter_factual)
         self.get_feature_values(x_ref, x_counter_factual)
 
-        sentences = self.get_natural_language_text()
-        self.natural_language_output = self.natural_language_text.format(sentences)
+        self.natural_language_text = self.get_natural_language_text()
+        self.method_text = self.get_method_text()
 
-        self.get_method_text()
-
-        print(self.method_text)
-        print(self.natural_language_output)
-
-        self.plot_name = f"counterfactual_{sample}_{bool(self.sparse)}.png"
-
+        self.plot_name = self.get_plot_name(sample)
         self.plot(sample)
         self.get_prediction(sample)
         self.save_csv(sample)
+        return self.method_text, self.natural_language_text
 
 
 if __name__ == "__main__":

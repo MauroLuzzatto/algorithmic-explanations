@@ -21,6 +21,9 @@ from src.model.utils import (
     map_index_to_sample,
 )
 
+from src.model.config import path_base
+
+
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.INFO)
 
@@ -28,9 +31,6 @@ logger.setLevel(logging.INFO)
 mode = None
 if mode == "testing":
 
-    path_base = (
-        r"C:\Users\maurol\OneDrive\Dokumente\Python_Scripts\model_explanation_study"
-    )
     path_load = os.path.join(path_base, "dataset", "training")
     path_model = os.path.join(path_base, "model")
     path_model = os.path.join(path_model, "2021-06-19--11-32-15")
@@ -48,10 +48,6 @@ if mode == "testing":
 
 
 else:
-
-    path_base = (
-        r"C:\Users\maurol\OneDrive\Dokumente\Python_Scripts\model_explanation_study"
-    )
     path_config = os.path.join(path_base, "src", "resources")
     path_load = os.path.join(path_base, "dataset", "training")
     path_model_base = os.path.join(path_base, "model")
@@ -88,33 +84,43 @@ for field in ["all"]:  # 'extracurricular', 'academic', 'democraphic',
     # Set: y_desired
     #########################################
 
-    samples = X.index.tolist()[:10]  # set 1
-    sparse = False
+    samples = X.index.tolist()[:]  # set 1
+    
+    samples_dict = {
+        'permutation': samples[:10],
+        'shapley': samples[10:20], 
+        'surrogate': samples[20:30],
+        'counterfactual': samples[30:40]
+    }
+    
+    for sparse in [True, False]:
 
-    # Global, Non-contrastive
-    permutation = PermutationExplanation(X, y, model, sparse, config)
-    for sample in samples:
-        sample = map_index_to_sample(X, sample)
-        permutation.main(sample)
+        # Global, Non-contrastive
+        permutation = PermutationExplanation(X, y, model, sparse, config)
+        for sample in samples_dict['permutation']:
+            sample = map_index_to_sample(X, sample)
+            method_text, explanation_text = permutation.main(sample)
+            print(method_text, explanation_text)
+    
+        # Local, Non-contrastive
+        shapely = ShapleyExplanation(X, y, model, sparse, config)
+        for sample in samples_dict['shapley']:
+            sample = map_index_to_sample(X, sample)
+            method_text, explanation_text = shapely.main(sample)
+            print(method_text, explanation_text)
 
-    # Local, Non-contrastive
-    shapely = ShapleyExplanation(X, y, model, sparse, config)
-    for sample in samples:
-        print(sample)
-        sample = map_index_to_sample(X, sample)
-        shapely.main(sample)
-
-    # Global, Contrastive
-    surrogate = SurrogateModelExplanation(X, y, model, sparse, config)
-    for sample in samples:
-        print(sample)
-        sample = map_index_to_sample(X, sample)
-        surrogate.main(sample)
-
-    # Local, Contrastive
-    counterfactual = CounterfactualExplanation(
-        X, y, model, sparse, config, y_desired=y.values.max()
-    )
-    for sample in samples:
-        sample = map_index_to_sample(X, sample)
-        counterfactual.main(sample)
+        # Global, Contrastive
+        surrogate = SurrogateModelExplanation(X, y, model, sparse, config)
+        for sample in samples_dict['surrogate']:
+            sample = map_index_to_sample(X, sample)
+            method_text, explanation_text = surrogate.main(sample)
+            print(method_text, explanation_text)
+    
+        # Local, Contrastive
+        counterfactual = CounterfactualExplanation(
+            X, y, model, sparse, config, y_desired=y.values.max()
+        )
+        for sample in samples_dict['counterfactual']:
+            sample = map_index_to_sample(X, sample)
+            method_text, explanation_text = counterfactual.main(sample)
+            print(method_text, explanation_text)

@@ -163,6 +163,19 @@ def stack_dataset_for_multiple_ratings(field, X, y):
 
 
 def setup_dataset(field, X, y):
+    """
+    
+
+    Args:
+        field (TYPE): DESCRIPTION.
+        X (TYPE): DESCRIPTION.
+        y (TYPE): DESCRIPTION.
+
+    Returns:
+        X (TYPE): DESCRIPTION.
+        y (TYPE): DESCRIPTION.
+
+    """
 
     if field == "all":
         # average the ratings for all case
