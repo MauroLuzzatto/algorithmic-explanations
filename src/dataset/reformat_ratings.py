@@ -12,10 +12,9 @@ import pandas as pd
 
 from src.model.config import path_base
 
-
 folder_name = "algorithmic_explanations"
 
-path_ratings = os.path.join(path_base, 'dataset', 'ratings')
+path_ratings = os.path.join(path_base, "dataset", "ratings")
 path_save = os.path.join(path_ratings, r"post_processed")
 
 meta_columns = [

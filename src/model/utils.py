@@ -164,7 +164,7 @@ def stack_dataset_for_multiple_ratings(field, X, y):
 
 def setup_dataset(field, X, y):
     """
-    
+
 
     Args:
         field (TYPE): DESCRIPTION.

@@ -5,8 +5,8 @@ Created on Tue Nov 24 21:15:30 2020
 @author: mauro
 """
 
-import os
 import csv
+import os
 from typing import Dict
 
 import pandas as pd
@@ -125,7 +125,7 @@ class ExplanationBase(ExplanationMixin):
 
         sentences = self.join_text_with_comma_and_and(values)
         return sentences
-    
+
     def get_natural_language_text(self, feature_values):
         """
         Generate the output of the explanation in natural language.
@@ -134,14 +134,14 @@ class ExplanationBase(ExplanationMixin):
             TYPE: DESCRIPTION.
 
         """
-        
+
         sentences = self.get_sentences(feature_values)
         return self.natural_language_text_empty.format(
             self.num_to_str[len(feature_values)], sentences
         )
-    
+
     def get_plot_name(self, sample=None):
-        
+
         if sample:
             plot_name = f"{self.explanation_name}_sample_{sample}_sparse_{bool(self.sparse)}.png"
         else:
@@ -178,8 +178,7 @@ class ExplanationBase(ExplanationMixin):
 
         df = pd.DataFrame(output, index=[sample])
 
-
-        for column in ['method', 'explanation']:
+        for column in ["method", "explanation"]:
 
             df[column] = df[column].astype(str)
             df[column] = df[column].str.replace("\n", "\\n")

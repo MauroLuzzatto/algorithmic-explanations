@@ -49,7 +49,7 @@ class ShapleyExplanation(ExplanationBase):
         self.feature_names = list(X)
         self.model = model
         self.num_features = self.sparse_to_num_features()
-        self.explanation_name = 'shapely'
+        self.explanation_name = "shapely"
         self.logger = self.setup_logger(self.explanation_name)
 
     def calculate_explanation(self) -> None:

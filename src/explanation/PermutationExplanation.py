@@ -58,7 +58,7 @@ class PermutationExplanation(ExplanationBase):
 
         self.feature_names = list(X)
         self.num_features = self.sparse_to_num_features()
-        
+
         self.explanation_name = "permutation"
         self.logger = self.setup_logger(self.explanation_name)
         self.plot_name = self.get_plot_name()

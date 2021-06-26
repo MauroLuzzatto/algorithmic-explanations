@@ -40,11 +40,11 @@ class SurrogateModelExplanation(ExplanationBase):
         self.feature_names = list(X)
         self.model = model
         self.num_features = self.sparse_to_num_features()
-        
+
         self.natural_language_text_empty = (
             "Applicants received an average score of {:.2f} if the value of {}"
         )
-        
+
         self.method_text_empty = (
             "To help you understand this decision, here is a decision tree "
             "showing you how the mechanism made its decision:"
@@ -118,7 +118,7 @@ class SurrogateModelExplanation(ExplanationBase):
             None.
         """
         surrogateText = SurrogateText(
-            text= self.natural_language_text_empty,
+            text=self.natural_language_text_empty,
             model=self.surrogate_model,
             X=self.X,
             feature_names=self.feature_names,

@@ -58,11 +58,11 @@ class CounterfactualExplanation(ExplanationBase):
         """
         self.X = X
         self.y = y
-        
+
         self.natural_language_text_empty = (
             "In your case, the mechanism would have awarded you the scholarship, {}."
         )
-        
+
         self.method_text_empty = (
             "To help you understand this decision, "
             "here is an example of another, similar applicant where the "
@@ -188,8 +188,7 @@ class CounterfactualExplanation(ExplanationBase):
         )
         # reorder dataframe according the the feature importance
         self.df = self.df.loc[self.feature_sort, :]
-        
-        
+
     def format_features_for_plot(self):
         """
         - map categorical variables
@@ -201,12 +200,12 @@ class CounterfactualExplanation(ExplanationBase):
         """
         for feature_name in list(self.df.index)[: self.num_features]:
             for col_name in ["Reference Values", "Counter Factual Values"]:
-                
+
                 feature_value = self.df.loc[feature_name, col_name]
                 self.df.loc[feature_name, col_name] = self.map_category(
                     feature_name, feature_value
                 )
-    
+
                 # replace one-hot-encoded value with True, False strings
                 if " - " in feature_name:
                     self.logger.debug(
@@ -216,7 +215,7 @@ class CounterfactualExplanation(ExplanationBase):
                         string = "True"
                     else:
                         string = "False"
-    
+
                     self.df.loc[feature_name, col_name] = string
 
     def plot(self, sample):

@@ -15,7 +15,7 @@ black_diff:
 	black src --color --diff
 
 black:
-	isort src/
+	isort src
 	black src
 
 

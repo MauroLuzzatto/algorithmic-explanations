@@ -44,8 +44,6 @@ df["leadership"] = df["leadership"].apply(replace_line_break)
 df["major"] = df["major"].apply(replace_line_break)
 
 
-
-
 def get_rank_bins(rank):
 
     bins = [

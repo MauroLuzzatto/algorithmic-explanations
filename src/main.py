@@ -13,6 +13,7 @@ from explanation import (
     ShapleyExplanation,
     SurrogateModelExplanation,
 )
+from src.model.config import path_base
 from src.model.DataConfig import DataConfig
 from src.model.utils import (
     average_the_ratings,
@@ -20,9 +21,6 @@ from src.model.utils import (
     load_pickle,
     map_index_to_sample,
 )
-
-from src.model.config import path_base
-
 
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.INFO)
@@ -85,42 +83,42 @@ for field in ["all"]:  # 'extracurricular', 'academic', 'democraphic',
     #########################################
 
     samples = X.index.tolist()[:]  # set 1
-    
+
     samples_dict = {
-        'permutation': samples[:10],
-        'shapley': samples[10:20], 
-        'surrogate': samples[20:30],
-        'counterfactual': samples[30:40]
+        "permutation": samples[:10],
+        "shapley": samples[10:20],
+        "surrogate": samples[20:30],
+        "counterfactual": samples[30:40],
     }
-    
+
     for sparse in [True, False]:
 
         # Global, Non-contrastive
         permutation = PermutationExplanation(X, y, model, sparse, config)
-        for sample in samples_dict['permutation']:
+        for sample in samples_dict["permutation"]:
             sample = map_index_to_sample(X, sample)
             method_text, explanation_text = permutation.main(sample)
             print(method_text, explanation_text)
-    
+
         # Local, Non-contrastive
         shapely = ShapleyExplanation(X, y, model, sparse, config)
-        for sample in samples_dict['shapley']:
+        for sample in samples_dict["shapley"]:
             sample = map_index_to_sample(X, sample)
             method_text, explanation_text = shapely.main(sample)
             print(method_text, explanation_text)
 
         # Global, Contrastive
         surrogate = SurrogateModelExplanation(X, y, model, sparse, config)
-        for sample in samples_dict['surrogate']:
+        for sample in samples_dict["surrogate"]:
             sample = map_index_to_sample(X, sample)
             method_text, explanation_text = surrogate.main(sample)
             print(method_text, explanation_text)
-    
+
         # Local, Contrastive
         counterfactual = CounterfactualExplanation(
             X, y, model, sparse, config, y_desired=y.values.max()
         )
-        for sample in samples_dict['counterfactual']:
+        for sample in samples_dict["counterfactual"]:
             sample = map_index_to_sample(X, sample)
             method_text, explanation_text = counterfactual.main(sample)
             print(method_text, explanation_text)

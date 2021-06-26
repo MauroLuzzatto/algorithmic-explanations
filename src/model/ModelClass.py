@@ -18,9 +18,9 @@ import sklearn  # type: ignore
 from LoggerClass import LoggerClass
 from sklearn.base import is_classifier, is_regressor  # type: ignore
 from sklearn.datasets import load_diabetes  # type: ignore
+from sklearn.metrics import f1_score  # type: ignore
 from sklearn.metrics import (
     accuracy_score,
-    f1_score,  # type: ignore
     mean_absolute_error,
     mean_absolute_percentage_error,
     mean_squared_error,
@@ -29,12 +29,12 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import RandomizedSearchCV  # type: ignore
 from sklearn.model_selection import train_test_split  # type: ignore
-from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 from xgboost import XGBRegressor  # type: ignore
 
-from src.model.utils import create_folder, get_dataset
 from src.model.config import path_base
+from src.model.utils import create_folder, get_dataset
 
 
 class ModelClass(object):
@@ -377,7 +377,6 @@ cv_settings = {
 
 if __name__ == "__main__":
 
-   
     path_load = os.path.join(path_base, r"dataset", "training")
     path_model = os.path.join(path_base, r"model")
 
@@ -403,4 +402,3 @@ if __name__ == "__main__":
 
     model = ModelClass(estimator, X, y, path_model)
     model.train(param_distributions, cv_settings, config)
-    

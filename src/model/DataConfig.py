@@ -44,24 +44,34 @@ class DataConfig(object):
             "College rank",
             "Favorite subject",
         ]
-        
+
         data_config["academic"] = get_column_selection(
             targets_academic, features_academic, columns
         )
-        
+
         targets_democraphic = ["democraphic"]
-        features_democraphic = ["Age", "Gender - ", "Ethnicity - ", "State of residence"]
-        
+        features_democraphic = [
+            "Age",
+            "Gender - ",
+            "Ethnicity - ",
+            "State of residence",
+        ]
+
         data_config["democraphic"] = get_column_selection(
             targets_democraphic, features_democraphic, columns
         )
-        
-        targets_all = targets_academic + targets_democraphic + ["essay.player"] +  ["extracurricular.player"]
-        features_all = features_academic + features_democraphic + ["Essay score"] + ["Number of"]
-        
-        data_config["all"] = get_column_selection(
-            targets_all, features_all, columns
+
+        targets_all = (
+            targets_academic
+            + targets_democraphic
+            + ["essay.player"]
+            + ["extracurricular.player"]
         )
+        features_all = (
+            features_academic + features_democraphic + ["Essay score"] + ["Number of"]
+        )
+
+        data_config["all"] = get_column_selection(targets_all, features_all, columns)
         return data_config
 
     def load_config(self):
@@ -77,13 +87,12 @@ class DataConfig(object):
         ) as f:
             json.dump(data_config, f, ensure_ascii=False, indent=4)
 
+
 if __name__ == "__main__":
-    
+
     path_load = os.path.join(path_base, "dataset", "training")
     path_config = os.path.join(path_base, "src", "resources")
     dataset_name = r"applications-website-up-to-20April-clean.csv_postprocessed.csv"
-    
+
     data = DataConfig(path_config)
     data_config = data.create_data_config(path_load, dataset_name)
-
-

@@ -10,11 +10,15 @@ import os
 
 import numpy as np
 import pandas as pd
-from data_cleaning_functions import get_age, get_rank_bins, make_date, replace_line_break
+from data_cleaning_functions import (
+    get_age,
+    get_rank_bins,
+    make_date,
+    replace_line_break,
+)
 from sklearn.preprocessing import MultiLabelBinarizer
 
 from src.model.config import path_base
-
 
 
 class DataPreprocessing(object):
@@ -299,7 +303,7 @@ if __name__ == "__main__":
         ("gender", "Gender"),
         ("current.grade", "Grade"),
         ("fav.subjects", "Favorite subject"),
-        ("leadership",  "Number of leadership experiences"),
+        ("leadership", "Number of leadership experiences"),
         ("extracurriculars", "Number of extracurricular activities"),
         ("state", "State of residence"),
         ("college.rank", "College rank"),
@@ -342,8 +346,8 @@ if __name__ == "__main__":
     essay_column = "essay"
     index_name = "Entry ID"
 
-    path_rating = os.path.join(path_base, r"dataset\ratings\post_processed")
-    path_save = os.path.join(path_base, r"dataset\training")
+    path_rating = os.path.join(path_base, r"dataset", "ratings", "post_processed")
+    path_save = os.path.join(path_base, r"dataset", "training")
     path_data = path_save
 
     file_name = "applications-website-up-to-20April-clean.csv"
@@ -372,7 +376,6 @@ if __name__ == "__main__":
         encoding="utf-8-sig",
         index_col=0,
     )
-    
 
     df_final = df_processed.merge(
         df_ratings, how="left", left_index=True, right_index=True
