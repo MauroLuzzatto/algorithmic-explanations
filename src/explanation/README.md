@@ -1,6 +1,9 @@
 # explainy
 
 
+![explainy logo](/resources/logo.png)
+
+
 ## Overview
 
 Method				| Implemenation 				|Type | Scope | Option|
