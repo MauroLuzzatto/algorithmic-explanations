@@ -1,9 +1,9 @@
 
-<img src="resources/logo.png" width="125" height="125" align="right" /></a>
-# explainy - Machine Learning model explanations for humans
+<img src="resources/logo.png" width="200" height="200" align="right" /></a>
+# explainy - model explanations for humans
 
 explainy is a library for generating explanations for machine learning models in Python. It uses various methods from **Machine Learning Explainability** and provides a standardized API to create global and local feature importance explanations for samples. The explanations are generated in the form of plots and text.
- 
+
 explainy comes with four different to create either global or local, contrastive or non-contrastive and dense or sparse machine learning model explanations.
 
 ## Options
