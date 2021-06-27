@@ -6,6 +6,9 @@ explainy is a library for generating explanations for machine learning models in
 
 explainy comes with four different to create either global or local, contrastive or non-contrastive and dense or sparse machine learning model explanations.
 
+
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
+
 ## Options
 Setting		|	description	|
 -----		|----			|
@@ -82,6 +85,9 @@ open-source software, released under the MIT license.
 [contribute]: https://github.com/explosion/spaCy/blob/master/CONTRIBUTING.md
 
 --->
+
+
+## Install explainy
 
 
 
