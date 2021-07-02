@@ -3,7 +3,6 @@
 
 init:
 	pip install -r requirements.txt
-	python -m spacy download en_core_web_sm
 
 freeze:
 	pip freeze > requirements.txt
@@ -14,15 +13,11 @@ flake8:
 black_diff:
 	black src --color --diff
 
+isort:
+	src
+
 black:
-	isort src
 	black src
-
-
-type_checking:
-	mypy src/model/ModelClass.py
-	mypy src/model/LoggerClass.py
-
 
 setup:
 	conda env create -f environment.yml

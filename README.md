@@ -1,7 +1,5 @@
 # Algorithmic Explanations (WIP)
 
-> work in progress
-
 This project generates explanations of the trained machine learning model. The following steps are included:
 - cleaning of data and encoding of the features
 - training and tuning a machine learning model (XGBoost)
@@ -11,7 +9,20 @@ This project generates explanations of the trained machine learning model. The f
 
 
 
-## Machine Learning explanability
+## Getting Started 
+
+Download the github repository:
+```bash
+git clone https://github.com/MauroLuzzatto/algorithmic-explanations
+```
+
+create a local environement and install the python requirements:
+```bash
+pip install -r requirements.txt
+```
+
+
+## Machine Learning explanability methods
 
 Method				| Implemenation 				|Type | Scope | Option|
 --- 				|	--- 						| --- | --- | --- | 

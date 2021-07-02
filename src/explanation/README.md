@@ -22,6 +22,9 @@ dense		|			|
 
 <!--
 
+💫 Industrial-strength Natural Language Processing (NLP) in Python
+Machine Learning model explanations for humans
+
 <img align="center" src="resources/logo.png" alt="logo" width="200"/>
 
 <a href="https://explosion.ai"><img src="https://explosion.ai/assets/img/logo.svg" width="125" height="125" align="right" /></a>
