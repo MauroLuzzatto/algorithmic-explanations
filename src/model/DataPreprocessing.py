@@ -328,7 +328,6 @@ if __name__ == "__main__":
     ]
 
     exclude_features = [
-        "email",
         "source.of.application",
         "scholarship.rules",
         "birth.date",
@@ -376,6 +375,11 @@ if __name__ == "__main__":
         encoding="utf-8-sig",
         index_col=0,
     )
+    df_ratings = df_ratings.drop(['name'], axis=1)
+    
+    print('WARNING [Only for testing]-----------remove----------------')
+    df_ratings['demographic.player.rating.1'] = df_ratings['academic.player.rating.1']
+    
 
     df_final = df_processed.merge(
         df_ratings, how="left", left_index=True, right_index=True
@@ -384,6 +388,8 @@ if __name__ == "__main__":
     df_final["Essay score"] = df_final[
         [col for col in list(df_final) if "essay.player.rating" in col]
     ]
-    df_final["Essay score"].fillna(999, inplace=True)
+    
+    print('WARNING [Only for testing]-----------remove----------------')
+    df_final["Essay score"].fillna(0.5, inplace=True)
 
     dataset.save_csv(df_final, name=save_name)

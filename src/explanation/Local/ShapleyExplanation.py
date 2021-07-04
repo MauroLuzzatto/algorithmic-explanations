@@ -169,7 +169,7 @@ class ShapleyExplanation(ExplanationBase):
         self.logger.info(
             "The expected_value was: {:.2f}".format(self.explainer.expected_value)
         )
-        self.logger.info("The y_value was: {}".format(self.y.values[sample]))
+        self.logger.info("The y_value was: {}".format(self.y.values[sample][0]))
         self.logger.info("The predicted value was: {}".format(self.prediction))
 
     def main(self, sample: int) -> None:

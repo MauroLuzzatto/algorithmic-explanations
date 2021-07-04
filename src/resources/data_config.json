@@ -93,8 +93,10 @@
             "College rank - unknown"
         ]
     },
-    "democraphic": {
-        "target": [],
+    "demographic": {
+        "target": [
+            "demographic.player.rating.1"
+        ],
         "features": [
             "Age",
             "State of residence",
@@ -116,7 +118,8 @@
             "academic.player.rating.1",
             "essay.player.rating.2",
             "extracurricular.player.rating.1",
-            "extracurricular.player.rating.2"
+            "extracurricular.player.rating.2",
+            "demographic.player.rating.1"
         ],
         "features": [
             "Number of extracurricular activities",

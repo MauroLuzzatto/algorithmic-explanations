@@ -4,6 +4,7 @@
 *.zip
 *.pickle
 *.docx
+*.xlsx
 
 
 result
@@ -17,6 +18,9 @@ _archive
 .mypy_cache
 .pytest_cache
 .env
+.spyproject
+
+qualtrics
 
 
 __pycache__

@@ -49,7 +49,7 @@ class DataConfig(object):
             targets_academic, features_academic, columns
         )
 
-        targets_democraphic = ["democraphic"]
+        targets_democraphic = ["demographic"]
         features_democraphic = [
             "Age",
             "Gender - ",
@@ -57,7 +57,7 @@ class DataConfig(object):
             "State of residence",
         ]
 
-        data_config["democraphic"] = get_column_selection(
+        data_config["demographic"] = get_column_selection(
             targets_democraphic, features_democraphic, columns
         )
 

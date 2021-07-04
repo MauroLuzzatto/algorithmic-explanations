@@ -87,11 +87,13 @@ class SurrogateModelExplanation(ExplanationBase):
             feature_names=self.feature_names,
             precision=self.precision,
         )
+        
+        name, extension = os.path.splitext(self.plot_name)
 
         graphviz.Source(
             dot_file,
-            filename=os.path.join(self.path_plot, "{}".format(self.plot_name)),
-            format="png",
+            filename=os.path.join(self.path_plot, name),
+            format=extension.replace('.', ''),
         ).view()
 
         if self.save:

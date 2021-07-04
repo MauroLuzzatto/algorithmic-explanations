@@ -31,7 +31,7 @@ data_config = data.create_data_config(path_load, dataset_name)
 data.save_config(data_config)
 
 
-for field in ["academic", "democraphic", "all"]:
+for field in ["academic", "demographic", "all"]:
     print(field)
 
     config = data_config[field]

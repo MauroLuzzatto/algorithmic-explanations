@@ -26,35 +26,15 @@ logger = logging.getLogger(__file__)
 logger.setLevel(logging.INFO)
 
 
-mode = None
-if mode == "testing":
+path_config = os.path.join(path_base, "src", "resources")
+path_load = os.path.join(path_base, "dataset", "training")
+path_model_base = os.path.join(path_base, "model")
 
-    path_load = os.path.join(path_base, "dataset", "training")
-    path_model = os.path.join(path_base, "model")
-    path_model = os.path.join(path_model, "2021-06-19--11-32-15")
-
-    dataset_name = "training_data_v2.csv"
-
-    model = load_pickle(
-        path_model=path_model,
-        model_name="XGBRegressor.pickle",
-    )
-
-    X, y = get_dataset(path_load=path_load, name=dataset_name)
-    # TODO: fix
-    X = X.fillna(X.median())  # works
+data = DataConfig(path_config)
+data_config = data.load_config()
 
 
-else:
-    path_config = os.path.join(path_base, "src", "resources")
-    path_load = os.path.join(path_base, "dataset", "training")
-    path_model_base = os.path.join(path_base, "model")
-
-    data = DataConfig(path_config)
-    data_config = data.load_config()
-
-
-for field in ["all"]:  # 'extracurricular', 'academic', 'democraphic',
+for field in ['demographic', 'academic', 'all']:
 
     model_name = [name for name in os.listdir(path_model_base) if field in name][0]
     path_model = os.path.join(path_model_base, model_name)
@@ -85,13 +65,13 @@ for field in ["all"]:  # 'extracurricular', 'academic', 'democraphic',
     samples = X.index.tolist()[:]  # set 1
 
     samples_dict = {
-        "permutation": samples[:10],
-        "shapley": samples[10:20],
-        "surrogate": samples[20:30],
-        "counterfactual": samples[30:40],
+        "permutation": samples[:50],
+        "shapley": samples[50:100],
+        "surrogate": samples[100:150],
+        "counterfactual": samples[150:200],
     }
 
-    for sparse in [True, False]:
+    for sparse in [False]:
 
         # Global, Non-contrastive
         permutation = PermutationExplanation(X, y, model, sparse, config)
@@ -113,6 +93,7 @@ for field in ["all"]:  # 'extracurricular', 'academic', 'democraphic',
             sample = map_index_to_sample(X, sample)
             method_text, explanation_text = surrogate.main(sample)
             print(method_text, explanation_text)
+            
 
         # Local, Contrastive
         counterfactual = CounterfactualExplanation(

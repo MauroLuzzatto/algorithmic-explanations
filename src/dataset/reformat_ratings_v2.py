@@ -12,10 +12,7 @@ import pandas as pd
 
 from src.model.config import path_base
 
-folder_name = "algorithmic_explanations"
 
-path_ratings = os.path.join(path_base, "dataset", "ratings")
-path_save = os.path.join(path_ratings, r"post_processed")
 
 meta_columns = [
     "participant.id_in_session",
@@ -82,8 +79,32 @@ def fix_column_name(columns):
     return columns_new
 
 
+
+
+folder_name = "algorithmic_explanations_v2"
+
+path_ratings = os.path.join(path_base, "dataset", "ratings")
+path_save = os.path.join(path_ratings, r"post_processed_v2")
+
+
+# for field in ['academic']:
+    
+#     df_list = []
+
+#     for file in os.listdir(os.path.join(path_ratings, folder_name)):
+        
+#         if field in file:
+#             df = pd.read_csv(os.path.join(path_ratings, folder_name, file))
+#             df_list.append(df)
+            
+#     df_all = pd.concat(df_list, axis=1)
+#     df_all.to_csv(
+#         os.path.join(path_ratings, folder_name, f"{field}.csv"), sep=",", encoding="utf-8"
+#     )
+
+
 df_list = []
-for file in os.listdir(os.path.join(path_ratings, folder_name)):
+for file in ['academic.csv']:
 
     print(file)
 
@@ -96,8 +117,8 @@ for file in os.listdir(os.path.join(path_ratings, folder_name)):
 
     df_metadata = df[meta_columns].T
 
+    # TODO: is this value still relevant?
     prefix = list(df)[50].split(".")[0]
-    print(prefix)
 
     for nr_round in range(1, 1000):
         columns = get_columns_per_round(nr_round, prefix)
@@ -110,7 +131,6 @@ for file in os.listdir(os.path.join(path_ratings, folder_name)):
         round_dict = df_subset.T.to_dict()
         for player in df.index:
             dict_data[player].append(round_dict[player])
-
             list_data.append(round_dict[player])
 
     for player in df.index:
@@ -132,10 +152,10 @@ for file in os.listdir(os.path.join(path_ratings, folder_name)):
     df_new = pd.DataFrame(list_data).sort_values("player.applicant_id")
     df_new.dropna(subset=["player.rating"], inplace=True)
 
-    # df_new.to_csv(
-    #         os.path.join(path_save, f'all_{file}.csv'),
-    #         sep=';', encoding='utf-8'
-    #     )
+    df_new.to_csv(
+            os.path.join(path_save, f'all_{file}.csv'),
+            sep=';', encoding='utf-8'
+        )
 
     df_rating = df_new.pivot(
         index=["player.applicant_id", "player.applicant_name"],
