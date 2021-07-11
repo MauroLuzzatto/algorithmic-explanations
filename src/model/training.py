@@ -23,7 +23,8 @@ path_load = os.path.join(path_base, "dataset", "training")
 path_model = os.path.join(path_base, "model")
 path_config = os.path.join(path_base, "src", "resources")
 
-dataset_name = r"applications-website-up-to-20April-clean.csv_postprocessed.csv"
+# dataset_name = r"applications-website-up-to-20April-clean.csv_postprocessed.csv"
+dataset_name = r"All-applications-clean_full_data.csv_postprocessed.csv"
 
 
 data = DataConfig(path_config)
@@ -31,7 +32,7 @@ data_config = data.create_data_config(path_load, dataset_name)
 data.save_config(data_config)
 
 
-for field in ["academic", "demographic", "all"]:
+for field in ["all"]:
     print(field)
 
     config = data_config[field]

@@ -49,6 +49,13 @@ class SurrogateModelExplanation(ExplanationBase):
             "To help you understand this decision, here is a decision tree "
             "showing you how the mechanism made its decision:"
         )
+        
+        # self.method_text_empty = (
+        #     "To help you understand the automated mechanism's decision, "
+        #     "here is a decision tree which shows you the {} features which " 
+        #     "were most important for the automated mechanism's decision-making:"
+        # )
+
 
         self.explanation_name = "surrogate"
         self.logger = self.setup_logger(self.explanation_name)
@@ -139,7 +146,7 @@ class SurrogateModelExplanation(ExplanationBase):
         self.method_text = self.get_method_text()
         self.plot()
 
-    def main(self, sample):
+    def main(self, sample_index, sample):
         """
         main function to create the explanation of the given sample. The
         method_text, natural_language_text and the plots are create per sample.
@@ -150,7 +157,7 @@ class SurrogateModelExplanation(ExplanationBase):
         Returns:
             None.
         """
-        self.get_prediction(sample)
+        self.get_prediction(sample_index)
         self.save_csv(sample)
         return self.method_text, self.natural_language_text
 

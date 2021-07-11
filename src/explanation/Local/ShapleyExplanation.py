@@ -109,8 +109,6 @@ class ShapleyExplanation(ExplanationBase):
             None
 
         """
-        self.plot_name = f"shapely_{sample}_{bool(self.sparse)}.png"
-
         indexes = np.argsort(abs(self.shap_values[sample, :]))
         sorted_idx = indexes.tolist()[::-1][: self.num_features]
 
@@ -172,7 +170,7 @@ class ShapleyExplanation(ExplanationBase):
         self.logger.info("The y_value was: {}".format(self.y.values[sample][0]))
         self.logger.info("The predicted value was: {}".format(self.prediction))
 
-    def main(self, sample: int) -> None:
+    def main(self, sample_index, sample) -> None:
         """
         main function to create the explanation of the given sample. The
         method_text, natural_language_text and the plots are create per sample.
@@ -185,16 +183,16 @@ class ShapleyExplanation(ExplanationBase):
         """
 
         self.calculate_explanation()
-        feature_values = self.get_feature_values(sample)
+        feature_values = self.get_feature_values(sample_index)
 
         self.natural_language_text = self.get_natural_language_text(feature_values)
         self.method_text = self.get_method_text(feature_values)
 
         self.plot_name = self.get_plot_name(sample)
-        self.plot(sample)
-        self.get_prediction(sample)
+        self.plot(sample_index)
+        self.get_prediction(sample_index)
         self.save_csv(sample)
-        self.log_output(sample)
+        self.log_output(sample_index)
         return self.method_text, self.natural_language_text
 
 

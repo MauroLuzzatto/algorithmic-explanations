@@ -118,19 +118,33 @@ class SurrogateText(object):
 
         """
 
-        mask = ""
+        mask = []
         for index, node in enumerate(path):
             # check if we are not in the leaf
             if index != len(path) - 1:
+                
+                feature_name_per_node = self.feature_names[self.feature[node]]
+                
+                one_hot_feature_bool =  ' - ' in feature_name_per_node
+                if one_hot_feature_bool:
+                    feature_name, feature_value = feature_name_per_node.split(' - ')
+                
                 # if under the threshold
                 if self.children_left[node] == path[index + 1]:
-                    mask += "'{}' is smaller or equal to {:.2f}\t".format(
-                        self.feature_names[self.feature[node]], self.threshold[node]
-                    )
+                    
+                    if one_hot_feature_bool:
+                        text = f"{feature_name}' is not '{feature_value}'"
+                    else:
+                        text = f"'{feature_name_per_node}' is smaller or equal to {self.threshold[node]:.2f}"
                 else:
-                    mask += "'{}' is larger than {:.2f}\t".format(
-                        self.feature_names[self.feature[node]], self.threshold[node]
-                    )
-        values = [criterion for criterion in mask.split("\t") if criterion]
+                    
+                    if one_hot_feature_bool:
+                        text = f"'{feature_name}' is '{feature_value}'"
+                    else:
+                        text = f"'{feature_name_per_node}' is larger than {self.threshold[node]:.2f}"
+                                             
+                mask.append(text)
+        values = [text for text in mask if text]
 
         return " and ".join(values)
+    

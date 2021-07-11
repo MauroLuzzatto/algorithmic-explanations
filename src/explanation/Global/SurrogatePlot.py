@@ -41,28 +41,70 @@ class SurrogatePlot(object):
         )
 
         if simplify:
-            # change the string via regex
-            f = re.sub(r"(\\nsamples = \d{0,5})", "", f)
-            f = re.sub(r"(samples = \d{0,5})", "", f)
-            f = re.sub(r"(\\n\\n)", "\\n", f)
-            f = re.sub(r"(\\nvalue)", "value", f)
-            f = re.sub(r"<=", "smaller\nor equal to", f)
-            # remove "value = xy" for all cells, except the lowest ones
-            values = re.findall(r"value = (\d{0,5}\.\d{0,5})", f)
-            for idx, value in enumerate(values):
-                if (len(values) > 3 and idx in [0, 1, 4]) or (
-                    len(values) <= 3 and idx in [0]
-                ):
-                    f = re.sub(r"value = {}".format(value), "", f)
-
-            f = re.sub(r"value =", "Average score:\n", f)
-
+            
+            f = self.remove_text(f)
+            f = self.simplify_plot(f)
             if add_label:
                 f = self.add_labels(f)
 
-        return f
 
-    def add_labels(self, f):
+        f = self.one_hot_encoding_text(f)
+
+        return f
+    
+    
+    @staticmethod
+    def one_hot_encoding_text(f):
+        """
+        customize the labels text for one-hot encoded features
+
+        Args:
+            f (TYPE): DESCRIPTION.
+
+        Returns:
+            f (TYPE): DESCRIPTION.
+        """                   
+        values = re.findall(r'\[label="(.*?)"\]', f, re.DOTALL)       
+        for value in values:
+        
+            if ' - ' in value:
+                text = value.split('smaller')[0].strip()
+                
+                feature_name = text.split(' - ')[0]
+                feature_value = text.split(' - ')[1]
+                new_text = f'{feature_name} is not {feature_value}'
+                f = f.replace(value, new_text)                
+        
+        return f
+    
+    
+    @staticmethod
+    def simplify_plot(f):
+       
+        # remove "value = xy" for all cells, except the lowest ones
+        values = re.findall(r"value = (\d{0,5}\.\d{0,5})", f)
+        for idx, value in enumerate(values):
+            if (len(values) > 3 and idx in [0, 1, 4]) or (
+                len(values) <= 3 and idx in [0]
+            ):
+                f = re.sub(r"value = {}".format(value), "", f)
+
+        f = re.sub(r"value =", "Average score:\n", f)
+        return f
+    
+    @staticmethod
+    def remove_text(f):
+         # change the string via regex
+        f = re.sub(r"(\\nsamples = \d{0,5})", "", f)
+        f = re.sub(r"(samples = \d{0,5})", "", f)
+        f = re.sub(r"(\\n\\n)", "\\n", f)
+        f = re.sub(r"(\\nvalue)", "value", f)
+        f = re.sub(r"<=", "smaller\nor equal to", f)
+        return f
+    
+
+    @staticmethod
+    def add_labels(f):
         """
         Add True and False labels to the edges
 

@@ -21,7 +21,7 @@ class DataConfig(object):
         """
         generate the data configuration dictionary
         """
-
+        exclude_list =  ['FirstName', 'LastName', 'Email']
         print(os.path.join(path_load, dataset_name))
         df = pd.read_csv(
             os.path.join(path_load, dataset_name),
@@ -34,42 +34,16 @@ class DataConfig(object):
         data_config = {}
         data_config["dataset"] = dataset_name
 
-        targets_academic = ["academic"]
-        features_academic = [
-            "SAT",
-            "ACT",
-            "GPA",
-            "Major",
-            "Grade",
-            "College rank",
-            "Favorite subject",
-        ]
-
-        data_config["academic"] = get_column_selection(
-            targets_academic, features_academic, columns
-        )
-
-        targets_democraphic = ["demographic"]
-        features_democraphic = [
-            "Age",
-            "Gender - ",
-            "Ethnicity - ",
-            "State of residence",
-        ]
-
-        data_config["demographic"] = get_column_selection(
-            targets_democraphic, features_democraphic, columns
-        )
-
         targets_all = (
-            targets_academic
-            + targets_democraphic
+            ["academic.player"]
             + ["essay.player"]
             + ["extracurricular.player"]
         )
-        features_all = (
-            features_academic + features_democraphic + ["Essay score"] + ["Number of"]
-        )
+        features_all = [
+            col for col in columns 
+            if 'player' not in col and col not in exclude_list
+        ]
+        print([col for col in columns if 'player' in col])
 
         data_config["all"] = get_column_selection(targets_all, features_all, columns)
         return data_config

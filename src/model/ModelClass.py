@@ -357,19 +357,19 @@ class ModelClass(object):
 
 
 param_distributions = {
-    "learning_rate": [0.01, 0.1, 0.25],
-    "max_depth": [3, 5, 7, 10],
+    "learning_rate": [0.01, 0.1, 0.25, 0.5],
+    "max_depth": [3, 5, 7, 10, 14],
     "min_child_weight": [1, 3, 5, 10],
     "subsample": [0.5, 0.7, 1.0],
     "colsample_bytree": [0.5, 0.7, 1.0],
-    "n_estimators": [100, 200, 500, 1000],
+    "n_estimators": [100, 200, 500],
     "objective": ["reg:squarederror"],
 }
 
 cv_settings = {
-    "n_iter": 10,  # total combinations testes
+    "n_iter": 100,  # total combinations testes
     "scoring": "r2",
-    "cv": 3,
+    "cv": 4,
     "random_state": 0,
     "n_jobs": -1,
     "verbose": 3,

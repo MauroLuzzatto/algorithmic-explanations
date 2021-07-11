@@ -115,6 +115,9 @@ class CounterfactualExplanation(ExplanationBase):
             "Predicted label: {}".format(self.model.predict(x_ref.reshape(1, -1))[0])
         )
         self.logger.debug(
+             f"Desired label: {self.y_desired}"
+            )
+        self.logger.debug(
             "Features of the {}th training example: {}".format(sample, x_ref)
         )
         self.logger.debug("Features of the countefactual: {}".format(x_counter_factual))
@@ -207,6 +210,8 @@ class CounterfactualExplanation(ExplanationBase):
         )
         # reorder dataframe according the the feature importance
         self.df = self.df.loc[self.feature_sort, :]
+        
+        self.df["difference of the new feature in the prediction"].plot(kind='bar', figsize=(10,2))
 
     def format_features_for_plot(self):
         """
@@ -231,13 +236,13 @@ class CounterfactualExplanation(ExplanationBase):
                         f"{feature_name}, {col_name}, {self.df.loc[feature_name, col_name]}"
                     )
                     if self.df.loc[feature_name, col_name] == 1.0:
-                        string = "True"
+                        string = "Yes" #"True"
                     else:
-                        string = "False"
+                        string = "No" #"False"
 
                     self.df.loc[feature_name, col_name] = string
 
-    def plot(self, sample):
+    def plot(self):
         """
         Plot the table comparing the refence and the counter factual values
 
@@ -312,13 +317,18 @@ class CounterfactualExplanation(ExplanationBase):
         sentences = []
         for feature_name, feature_value in zip(feature_names, feature_values):
             feature_value = self.map_category(feature_name, feature_value)
-            sentence_filled = sentence.format(feature_name, feature_value)
 
             # handle one-hot encoding case
             if " - " in feature_name:
                 sentence_filled = self.create_one_hot_sentence(
                     feature_name, feature_value, sentence
-                )
+                )                
+                mode = 'one-hot feature'
+            else:
+                sentence_filled = sentence.format(feature_name, f"'{feature_value}'")
+                mode = 'standard feature'
+            
+            self.logger.debug(f"{mode}: {sentence_filled}")
             sentences.append(sentence_filled)
 
         sentences = self.join_text_with_comma_and_and(sentences)
@@ -344,13 +354,13 @@ class CounterfactualExplanation(ExplanationBase):
         column, value = feature_name.split(" - ")
 
         if int(feature_value) == 1:
-            sentence_filled = sentence.format(column, value)
+            sentence_filled = sentence.format(column, f"'{value}'")
         else:
             sentence_filled = sentence.format(column, f"not '{value}'")
 
         return sentence_filled
 
-    def main(self, sample):
+    def main(self, sample_index, sample):
         """
         main function to create the explanation of the given sample. The
         method_text, natural_language_text and the plots are create per sample.
@@ -362,7 +372,7 @@ class CounterfactualExplanation(ExplanationBase):
             None.
         """
 
-        x_ref, x_counter_factual = self.calculate_explanation(sample)
+        x_ref, x_counter_factual = self.calculate_explanation(sample_index)
         self.get_feature_importance(x_ref, x_counter_factual)
         self.get_feature_values(x_ref, x_counter_factual)
 
@@ -370,8 +380,8 @@ class CounterfactualExplanation(ExplanationBase):
         self.method_text = self.get_method_text()
 
         self.plot_name = self.get_plot_name(sample)
-        self.plot(sample)
-        self.get_prediction(sample)
+        self.plot()
+        self.get_prediction(sample_index)
         self.save_csv(sample)
         return self.method_text, self.natural_language_text
 

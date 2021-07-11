@@ -167,7 +167,7 @@ class PermutationExplanation(ExplanationBase):
         self.method_text = self.get_method_text(feature_values)
         self.plot()
 
-    def main(self, sample):
+    def main(self, sample_index, sample):
         """
         main function to create the explanation of the given sample. The
         method_text, natural_language_text and the plots are create per sample.
@@ -179,7 +179,7 @@ class PermutationExplanation(ExplanationBase):
             None.
         """
 
-        self.get_prediction(sample)
+        self.get_prediction(sample_index)
         self.save_csv(sample)
         return self.method_text, self.natural_language_text
 

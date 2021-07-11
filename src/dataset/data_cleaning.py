@@ -6,7 +6,7 @@ Created on Fri May 28 20:49:31 2021
 """
 
 path = r"C:\Users\maurol\OneDrive\Dokumente\Python_Scripts\algorithmic-explanations\dataset\training"
-file = "applications-website-up-to-20April-clean.csv"
+file = "All-applications-clean_full_data.csv"
 
 
 import os
@@ -29,7 +29,7 @@ def replace_line_break(string):
     return string.replace("\r\n", " | ") if isinstance(string, str) else ""
 
 
-df = pd.read_csv(os.path.join(path, file), sep=";", encoding="cp1252", index_col=0)
+df = pd.read_csv(os.path.join(path, file), sep=";", encoding="utf-8", index_col=0)
 df["GPA"] = df["GPA"].str.replace(",", ".").astype(float)
 
 

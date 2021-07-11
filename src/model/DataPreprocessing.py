@@ -10,6 +10,7 @@ import os
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from data_cleaning_functions import (
     get_age,
     get_rank_bins,
@@ -66,8 +67,7 @@ class DataPreprocessing(object):
         self.df = pd.read_csv(
             os.path.join(self.path_data, self.file_name),
             sep=";",
-            encoding="cp1252",
-            index_col=0,
+            encoding="utf-8",
         )
         self.df.set_index(column, inplace=True, verify_integrity=True, drop=True)
         print(self.df.shape)
@@ -236,6 +236,11 @@ class DataPreprocessing(object):
 
         """
         for feature in fill_na:
+            
+            plt.title(feature)
+            self.df[feature].hist(figsize=(4,4))
+            plt.show()
+            
             if approach == "min":
                 value = self.df[feature].min()
             elif isinstance(approach, float):
@@ -243,6 +248,7 @@ class DataPreprocessing(object):
 
             else:
                 value = self.df[feature].median()
+                
             print(feature, value)
             self.df[feature].fillna(value, inplace=True)
 
@@ -311,13 +317,10 @@ if __name__ == "__main__":
     ]
 
     categorical_encoding = [
-        "State of residence",
     ]
     one_hot_encoding = [
         "Major",
         "Grade",
-        "Gender",
-        "Ethnicity",
         "Favorite subject",
         "College rank",
     ]
@@ -333,6 +336,10 @@ if __name__ == "__main__":
         "birth.date",
         "college.text",
         "essay",
+        "Ethnicity",
+        "Gender",
+        "State of residence",
+        "Age"
     ]
 
     fill_na = [
@@ -345,11 +352,11 @@ if __name__ == "__main__":
     essay_column = "essay"
     index_name = "Entry ID"
 
-    path_rating = os.path.join(path_base, r"dataset", "ratings", "post_processed")
+    path_rating = os.path.join(path_base, r"dataset", "ratings", "post_processed_v2")
     path_save = os.path.join(path_base, r"dataset", "training")
     path_data = path_save
 
-    file_name = "applications-website-up-to-20April-clean.csv"
+    file_name = "All-applications-clean_full_data.csv"
     save_name = f"{file_name}_postprocessed.csv"
 
     dataset = DataPreprocessing(path_data, file_name, path_save)
@@ -375,21 +382,24 @@ if __name__ == "__main__":
         encoding="utf-8-sig",
         index_col=0,
     )
-    df_ratings = df_ratings.drop(['name'], axis=1)
     
-    print('WARNING [Only for testing]-----------remove----------------')
-    df_ratings['demographic.player.rating.1'] = df_ratings['academic.player.rating.1']
     
-
     df_final = df_processed.merge(
-        df_ratings, how="left", left_index=True, right_index=True
+        df_ratings, how="outer", left_index=True, right_index=True
     )
 
     df_final["Essay score"] = df_final[
         [col for col in list(df_final) if "essay.player.rating" in col]
-    ]
+    ].mean(axis=1)
     
-    print('WARNING [Only for testing]-----------remove----------------')
-    df_final["Essay score"].fillna(0.5, inplace=True)
-
+    
+    # for _, row in df_final.iterrows():
+    #     print(row[['FirstName', 'LastName', 'Email', 'name']].values)
+        
+        
+    df_final.dropna(subset=['FirstName'], inplace=True)
+    df_final = df_final.drop(['name', 'Token'], axis=1)
+    
     dataset.save_csv(df_final, name=save_name)
+
+    

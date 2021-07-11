@@ -8,6 +8,7 @@ import os
 import pickle
 
 import pandas as pd
+import numpy as np
 from sklearn.datasets import load_diabetes
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
@@ -150,14 +151,22 @@ def stack_dataset_for_multiple_ratings(field, X, y):
     """
     Stack the rating from multiple players
     """
+    
+    print(list(y))
+    
+    num_players = y.shape[1]
+    
     y = y.stack().reset_index()
     new_name = f"{field}.player.rating"
     y.rename(columns={0: new_name}, inplace=True)
     y.set_index("Entry ID", inplace=True)
     y = y[new_name]
     y.sort_index(inplace=True)
-
-    X = X.append(X)
+    
+    
+    X_list = [X for _ in range(num_players)]
+    X = pd.concat(X_list, axis=0)
+        
     X.sort_index(inplace=True)
     return X, y
 
@@ -180,8 +189,10 @@ def setup_dataset(field, X, y):
     if field == "all":
         # average the ratings for all case
         columns = list(y)
-        for player_number in list(range(1, 5)):
+        for player_number in list(range(1, 4)):
             player_cols = [col for col in columns if str(player_number) in col]
+            print(player_cols)
+            
             new_name = f"full.player.rating.{player_number}"
             y = average_the_ratings(y, player_cols, new_name)
 
@@ -189,6 +200,7 @@ def setup_dataset(field, X, y):
     if y.shape[1] > 1:
         # stack the dataframes
         X, y = stack_dataset_for_multiple_ratings(field, X, y)
+    print("setup_dataset")
     print(f"X.shape: {X.shape}")
     print(f"y.shape: {y.shape}")
     return X, y
@@ -198,3 +210,81 @@ def average_the_ratings(y, columns, new_name):
     y[new_name] = y[columns].mean(axis=1)
     y.drop(columns, axis=1, inplace=True)
     return y
+
+
+def shuffle_in_unison(a,b, seed=0):
+    """
+    shuffle two pandas dataframe in parallel
+
+    Args:
+        a (TYPE): DESCRIPTION.
+        b (TYPE): DESCRIPTION.
+
+    Returns:
+        TYPE: DESCRIPTION.
+        TYPE: DESCRIPTION.
+
+    """
+
+    assert len(a)==len(b)
+    c = np.arange(len(a))
+    
+    
+    np.random.seed(seed)    
+    np.random.shuffle(c)
+    
+    return a.iloc[c], b.iloc[c]
+
+
+def create_treatment_dataframe(samples_dict):
+    
+    number = 1
+    treatment_groups = []
+    for key in samples_dict.keys():
+        for samples, sparse in samples_dict[key]:
+            
+            for sample in samples:
+                treatment_groups.append(
+                  
+                        {'Entry ID': sample,
+                         'explanation_type': key,
+                         'sparse': sparse,
+                         'treat': number
+                         }
+                    )
+            number+=1
+                
+    return pd.DataFrame(treatment_groups)
+
+
+def experiment_setup(X):
+    
+    
+    samples = X.index.tolist()
+    samples_per_split = int(len(samples)/9.)
+        
+    samples_dict = {
+        "permutation": [
+            (samples[0*samples_per_split:1*samples_per_split], True), 
+            (samples[1*samples_per_split:2*samples_per_split], False)
+        ],
+        "shapley": [
+            (samples[2*samples_per_split:3*samples_per_split], True), 
+            (samples[3*samples_per_split:4*samples_per_split], False)
+            
+        ],
+        "surrogate": [
+            (samples[4*samples_per_split:5*samples_per_split], True), 
+            (samples[5*samples_per_split:6*samples_per_split], False)
+            
+        ],
+        "counterfactual": [
+            (samples[6*samples_per_split:7*samples_per_split], True), 
+            (samples[7*samples_per_split:8*samples_per_split], False)
+        ],
+        "control group":[
+            (samples[8*samples_per_split:], None), 
+        ]
+    }
+       
+    return samples_dict

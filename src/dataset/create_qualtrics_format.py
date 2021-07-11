@@ -64,8 +64,8 @@ path_config = os.path.join(path_base, "src", "resources")
 
 
 mapping = [
-    ('academic', 'A'),
-    ('demographic', 'B'),
+    # ('academic', 'A'),
+    # ('demographic', 'B'),
     ('all', 'C'),
 ]
 
@@ -74,30 +74,35 @@ data_config = data.load_config()
 df_dataset = pd.read_csv(os.path.join(path_load, data_config['dataset']), sep=";", index_col=0)
 
 
-df_qualtrics = pd.read_excel(os.path.join(path_base, 'AlgorithmicExplanation.xlsx'))
+token_file = 'AlgoFeedback-Participants.xlsx'
+df_qualtrics = pd.read_excel(os.path.join(path_base, 'qualtrics', token_file))
 df_qualtrics = df_qualtrics.iloc[:df_dataset.shape[0]]
 column_list = list(df_qualtrics)
 
+
 df_qualtrics = df_qualtrics.drop(['Email'], axis=1)
-df_qualtrics = df_qualtrics.drop(['TextA', "TextB", "TextC"], axis=1)
-# , "FileA", "FileB", "FileC"
+df_qualtrics = df_qualtrics.drop(['TextA', "TextB", 'Treat'], axis=1)
+df_qualtrics['Pic'] = df_qualtrics['ParticipantToken'] + '.png'
 
 
 df_qualtrics['Entry ID'] = df_dataset.index
-df_qualtrics = pd.merge(df_qualtrics,  df_dataset[['name', 'email']], left_on='Entry ID', right_index=True)
+df_qualtrics = pd.merge(
+    df_qualtrics,  df_dataset['Email'], 
+    left_on='Entry ID', right_index=True
+)
 
-df_qualtrics['FirstName'] = df_qualtrics['name'].apply(lambda text: text.split()[0].capitalize())
-df_qualtrics['LastName'] = df_qualtrics['name'].apply(lambda text: ' '.join(text.split()[1:]).capitalize())
+# df_qualtrics['FirstName'] = df_qualtrics['name'].apply(lambda text: text.split()[0].capitalize())
+# df_qualtrics['LastName'] = df_qualtrics['name'].apply(lambda text: ' '.join(text.split()[1:]).capitalize())
 
 df_qualtrics.rename(
     columns={
-        'email': 'Email', 
+        'Pic': 'FileC', 
         },
     inplace=True
 )
 
 
-for field in ['all', 'academic', 'demographic']:
+for field in ['all']:
 
     path = os.path.join(path_reports, f'{field}',  r'results\explanations.csv')
 
@@ -109,18 +114,20 @@ for field in ['all', 'academic', 'demographic']:
         usecols = ['Entry ID', 'method', 'explanation', 'plot']
     )
     
-    df[field] = df['method'] + '\n' + df['explanation']
+    df[field] = df['explanation']
     df[field + '_plot'] = df['plot']
     
     df = df[~df.index.duplicated(keep='first')]
     
     df_qualtrics = pd.merge(
         df_qualtrics,  
-        df[[field, field + '_plot']], 
-        left_index=True, 
+        df[['method', field, field + '_plot']], 
+        left_on='Entry ID', 
         right_index=True,
         how='left'
     )
+
+
 
 
 
@@ -132,6 +139,32 @@ for _, to_col in mapping:
     # replace linebreak with html break <br>
     df_qualtrics[f'Text{to_col}'] = df_qualtrics[f'Text{to_col}'].str.replace(r'\n', '<br>')
     df_qualtrics[f'Text{to_col}'] = df_qualtrics[f'Text{to_col}'].str.replace(r'\\n', '<br>')
+
+
+
+
+df_treatment = pd.read_csv(
+    os.path.join(path_reports, f'{field}', 'treatment_groups.csv'),
+    sep=";", index_col=0
+)
+
+
+df_qualtrics = pd.merge(
+    df_qualtrics,  df_treatment, 
+    left_on='Entry ID', right_on='Entry ID'
+)
+
+
+df_qualtrics.rename(
+    columns={
+        'treat': 'Treat', 
+        'FileC': 'Pic',
+        'method': 'TextB',
+        'TextC': 'TextA'
+        },
+    inplace=True
+)
+
 
 
 df_output = df_qualtrics[column_list]

@@ -11,7 +11,7 @@ from collections import defaultdict
 import pandas as pd
 
 from src.model.config import path_base
-
+from src.model.utils import create_folder
 
 
 meta_columns = [
@@ -82,81 +82,86 @@ def fix_column_name(columns):
 
 
 folder_name = "algorithmic_explanations_v2"
+post_folder = r"post_processed_v2"
 
 path_ratings = os.path.join(path_base, "dataset", "ratings")
-path_save = os.path.join(path_ratings, r"post_processed_v2")
+path_save = create_folder(os.path.join(path_ratings, post_folder))
 
 
-# for field in ['academic']:
-    
-#     df_list = []
+files = os.listdir(os.path.join(path_ratings, folder_name))
 
-#     for file in os.listdir(os.path.join(path_ratings, folder_name)):
-        
-#         if field in file:
-#             df = pd.read_csv(os.path.join(path_ratings, folder_name, file))
-#             df_list.append(df)
-            
-#     df_all = pd.concat(df_list, axis=1)
-#     df_all.to_csv(
-#         os.path.join(path_ratings, folder_name, f"{field}.csv"), sep=",", encoding="utf-8"
-#     )
-
+save = True
 
 df_list = []
-for file in ['academic.csv']:
+for field in ['extracurricular', 'academic', 'essay']:
 
-    print(file)
 
     dict_data = defaultdict(list)
     dict_df = {}
     list_data = []
+    
+    
+    for file in [file for file in files if field in file]:
+        
+        print(file)
 
-    df = pd.read_csv(os.path.join(path_ratings, folder_name, file))
-    df.index = ["player1", "player2", "player3"]
 
-    df_metadata = df[meta_columns].T
+        df = pd.read_csv(os.path.join(path_ratings, folder_name, file))
+        df.index = ["player1", "player2", "player3"][:df.shape[0]]
 
-    # TODO: is this value still relevant?
-    prefix = list(df)[50].split(".")[0]
+        print(df.head())
+        if file == 'extracurricular_batch1_P2P3.csv':
+            # Hard coded
+            df.drop("player1", axis=0, inplace=True)
+        
 
-    for nr_round in range(1, 1000):
-        columns = get_columns_per_round(nr_round, prefix)
-        try:
-            df_subset = df[columns]
-        except KeyError:
-            continue
-
-        df_subset.columns = base_columns
-        round_dict = df_subset.T.to_dict()
+    
+        df_metadata = df[meta_columns].T
+    
+        # TODO: is this value still relevant?
+        prefix = list(df)[50].split(".")[0]
+    
+        for nr_round in range(1, 1000):
+            columns = get_columns_per_round(nr_round, prefix)
+            try:
+                df_subset = df[columns]
+            except KeyError:
+                continue
+    
+            df_subset.columns = base_columns
+            round_dict = df_subset.T.to_dict()
+            for player in df.index:
+                dict_data[player].append(round_dict[player])
+                list_data.append(round_dict[player])
+    
         for player in df.index:
-            dict_data[player].append(round_dict[player])
-            list_data.append(round_dict[player])
+            dict_df[player] = (
+                pd.DataFrame(dict_data[player])
+                .sort_values("player.applicant_id")
+                .dropna(subset=["player.rating"])
+            )
+    
+            # fig = plt.figure(figsize=(4,4))
+            # plt.title(f'{player} - {file}')
+            # plt.hist(dict_df[player]['player.rating'])
+            # plt.show()
+    
+            if save:
 
-    for player in df.index:
-        dict_df[player] = (
-            pd.DataFrame(dict_data[player])
-            .sort_values("player.applicant_id")
-            .dropna(subset=["player.rating"])
-        )
-
-        # fig = plt.figure(figsize=(4,4))
-        # plt.title(f'{player} - {file}')
-        # plt.hist(dict_df[player]['player.rating'])
-        # plt.show()
-
-        dict_df[player].to_csv(
-            os.path.join(path_save, f"{player}_{file}.csv"), sep=",", encoding="utf-8"
-        )
+                dict_df[player].to_csv(
+                    os.path.join(path_save, f"{player}_{file}.csv"), sep=",", encoding="utf-8"
+                )
 
     df_new = pd.DataFrame(list_data).sort_values("player.applicant_id")
     df_new.dropna(subset=["player.rating"], inplace=True)
 
-    df_new.to_csv(
-            os.path.join(path_save, f'all_{file}.csv'),
-            sep=';', encoding='utf-8'
-        )
-
+    if save:
+        df_new.to_csv(
+                os.path.join(path_save, f'all_{file}.csv'),
+                sep=';', encoding='utf-8'
+            )
+    
+    
     df_rating = df_new.pivot(
         index=["player.applicant_id", "player.applicant_name"],
         columns="player.id_in_group",
@@ -169,13 +174,19 @@ for file in ['academic.csv']:
 
     df_rating.columns = columns
     df_rating = df_rating.rename(
-        columns={"player.applicant_name": "name", "player.applicant_id": "Entry ID"}
+        columns={
+                "player.applicant_name": "name", 
+                "player.applicant_id": "Entry ID"
+            }
     )
 
+    df_rating.index = df_rating.index.astype(int) #use astype to convert to int
 
-    df_rating.to_csv(
-        os.path.join(path_save, f"ratings_{file}.csv"), sep=",", encoding="utf-8"
-    )
+    if save:
+
+        df_rating.to_csv(
+            os.path.join(path_save, f"ratings_{file}.csv"), sep=",", encoding="utf-8"
+        )
 
     df_list.append(df_rating)
 
@@ -188,19 +199,11 @@ for index, _df in enumerate(df_list):
         df_all = df_all.merge(_df, how="outer", on=["Entry ID", "name"])
 
     print(df_all.shape)
-
+    
+    
+df_all = df_all[df_all["Entry ID"] < 1000000]
 df_all.set_index("Entry ID", inplace=True, verify_integrity=True, drop=True)
+df_all.index = df_all.index.astype(int) #use astype to convert to int
+
 df_all.to_csv(os.path.join(path_save, "ratings.csv"), sep=";", encoding="utf-8")
 
-
-# 'participant'
-# 'session'
-# 'human_judge_intro'
-# 'human_judge_finished'
-# 'human_judge_academic'
-
-#  'human_judge_intro.1.player.id_in_group',
-#  'human_judge_intro.1.player.role',
-#  'human_judge_intro.1.player.payoff',
-#  'human_judge_intro.1.group.id_in_subsession',
-#  'human_judge_intro.1.subsession.round_number',

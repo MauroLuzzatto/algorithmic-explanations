@@ -20,6 +20,9 @@ from src.model.utils import (
     get_dataset,
     load_pickle,
     map_index_to_sample,
+    shuffle_in_unison,
+    experiment_setup,
+    create_treatment_dataframe
 )
 
 logger = logging.getLogger(__file__)
@@ -34,12 +37,14 @@ data = DataConfig(path_config)
 data_config = data.load_config()
 
 
-for field in ['demographic', 'academic', 'all']:
+for field in ['all']:
 
-    model_name = [name for name in os.listdir(path_model_base) if field in name][0]
+    model_name = [name for name in os.listdir(path_model_base) if field in name][-1]
+    print(model_name)
     path_model = os.path.join(path_model_base, model_name)
 
     config = data_config[field]
+    config["folder"] = field
 
     model = load_pickle(
         path_model=path_model,
@@ -55,51 +60,56 @@ for field in ['demographic', 'academic', 'all']:
 
     new_name = f"{field}.player.rating"
     y = average_the_ratings(y, list(y), new_name)
-
-    config["folder"] = field
-
-    ########################################33
-    # Set: y_desired
-    #########################################
-
-    samples = X.index.tolist()[:]  # set 1
-
-    samples_dict = {
-        "permutation": samples[:50],
-        "shapley": samples[50:100],
-        "surrogate": samples[100:150],
-        "counterfactual": samples[150:200],
-    }
-
-    for sparse in [False]:
-
-        # Global, Non-contrastive
-        permutation = PermutationExplanation(X, y, model, sparse, config)
-        for sample in samples_dict["permutation"]:
-            sample = map_index_to_sample(X, sample)
-            method_text, explanation_text = permutation.main(sample)
-            print(method_text, explanation_text)
-
-        # Local, Non-contrastive
-        shapely = ShapleyExplanation(X, y, model, sparse, config)
-        for sample in samples_dict["shapley"]:
-            sample = map_index_to_sample(X, sample)
-            method_text, explanation_text = shapely.main(sample)
-            print(method_text, explanation_text)
-
-        # Global, Contrastive
-        surrogate = SurrogateModelExplanation(X, y, model, sparse, config)
-        for sample in samples_dict["surrogate"]:
-            sample = map_index_to_sample(X, sample)
-            method_text, explanation_text = surrogate.main(sample)
-            print(method_text, explanation_text)
+    
+    # score =  y[
+    #     [col for col in list(y) if "player.rating" in col]
+    # ].mean(axis=1).reset_index()
+    
+    
+    X, y = shuffle_in_unison(X, y)
             
 
-        # Local, Contrastive
+    samples_dict = experiment_setup(X) 
+    df_treatment = create_treatment_dataframe(samples_dict)
+    
+    path_save = os.path.join(os.path.dirname(os.getcwd()), "reports", field)
+    
+    df_treatment.to_csv(
+        os.path.join(path_save, 'treatment_groups.csv'),
+       sep=";",
+       encoding="utf-8-sig",
+    )
+    
+    # Global, Non-contrastive
+    for samples, sparse in samples_dict["permutation"]:
+        permutation = PermutationExplanation(X, y, model, sparse, config)
+        for sample in samples:
+            sample_index = map_index_to_sample(X, sample)
+            method_text, explanation_text = permutation.main(sample_index, sample)
+            print(sample, method_text, explanation_text)
+
+    # Local, Non-contrastive
+    for samples, sparse in samples_dict["shapley"]:
+        shapely = ShapleyExplanation(X, y, model, sparse, config)
+        for sample in samples:
+            sample_index = map_index_to_sample(X, sample)
+            method_text, explanation_text = shapely.main(sample_index, sample)
+            print(method_text, explanation_text)
+
+    # Global, Contrastive
+    for samples, sparse in samples_dict["surrogate"]:
+        surrogate = SurrogateModelExplanation(X, y, model, sparse, config)
+        for sample in samples:            
+            sample_index = map_index_to_sample(X, sample)
+            method_text, explanation_text = surrogate.main(sample_index, sample)
+            print(sample, method_text, explanation_text)
+            
+    # Local, Contrastive
+    for  samples, sparse in samples_dict["counterfactual"]:
         counterfactual = CounterfactualExplanation(
             X, y, model, sparse, config, y_desired=y.values.max()
         )
-        for sample in samples_dict["counterfactual"]:
-            sample = map_index_to_sample(X, sample)
-            method_text, explanation_text = counterfactual.main(sample)
-            print(method_text, explanation_text)
+        for sample in samples:
+            sample_index = map_index_to_sample(X, sample)
+            method_text, explanation_text = counterfactual.main(sample_index, sample)
+            print(sample, method_text, explanation_text)
