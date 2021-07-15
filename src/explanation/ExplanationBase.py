@@ -22,11 +22,26 @@ class ExplanationBase(ExplanationMixin):
     """
 
     def __init__(
-        self, sparse: bool = False, save: bool = True, config: Dict = None
+        self, sparse: bool = False, show_rating: bool = True, save: bool = True, config: Dict = None, 
     ) -> None:
+        """
+        
+
+        Args:
+            sparse (bool, optional): DESCRIPTION. Defaults to False.
+            show_rating (bool, optional): DESCRIPTION. Defaults to True.
+            save (bool, optional): DESCRIPTION. Defaults to True.
+            config (Dict, optional): DESCRIPTION. Defaults to None.
+             (TYPE): DESCRIPTION.
+
+        Returns:
+            None: DESCRIPTION.
+
+        """
 
         self.sparse = sparse
         self.save = save
+        self.show_rating = show_rating
 
         if not config:
             config = {}
@@ -47,6 +62,18 @@ class ExplanationBase(ExplanationMixin):
             "the {} features which were most important for "
             "how the mechanism made its decision in your specific case:"
         )
+        
+        self.score_text_empty = (
+            "The automated mechanism analyzed hundreds of applications and used {} features to produce a rating for each applicant between 1 and 10."            
+            )
+         
+        self.score_text_extension = (
+              "Your application rating was {:.1f}."
+          )
+                
+        if self.show_rating:   
+            self.score_text_empty + self.score_text_extension
+                  
 
     def setup_paths(self):
 
@@ -69,7 +96,7 @@ class ExplanationBase(ExplanationMixin):
         raise NotImplementedError("Subclasses should implement this!")
 
     def sparse_to_num_features(
-        self, sparse_features: int = 2, dense_features: int = 6
+        self, sparse_features: int = 3, dense_features: int = 6
     ) -> int:
         """
         Convert sparse bool into the number of selected features
@@ -139,6 +166,15 @@ class ExplanationBase(ExplanationMixin):
         return self.natural_language_text_empty.format(
             self.num_to_str[len(feature_values)], sentences
         )
+    
+    def get_score_text(self, feature_values: list):
+        
+        number_data_features =  self.X.shape[1]        
+        
+        return self.score_text_empty.format(
+           number_data_features, self.prediction
+        )
+        
 
     def get_plot_name(self, sample=None):
 
@@ -162,13 +198,13 @@ class ExplanationBase(ExplanationMixin):
 
         """
         assert hasattr(self, "method_text"), "instance lacks method_text"
-        assert hasattr(
-            self, "natural_language_text"
-        ), "instance lacks natural_language_text"
+        assert hasattr(self, "score_text"), "instance lacks score_text"
+        assert hasattr(self, "natural_language_text"), "instance lacks natural_language_text"
         assert hasattr(self, "plot_name"), "instance lacks plot_name"
         assert hasattr(self, "prediction"), "instance lacks prediction"
 
         output = {
+            "score_text": self.score_text,
             "method": self.method_text,
             "explanation": self.natural_language_text,
             "plot": self.plot_name,
@@ -178,8 +214,7 @@ class ExplanationBase(ExplanationMixin):
 
         df = pd.DataFrame(output, index=[sample])
 
-        for column in ["method", "explanation"]:
-
+        for column in ["method", "explanation", "score_text"]:
             df[column] = df[column].astype(str)
             df[column] = df[column].str.replace("\n", "\\n")
 

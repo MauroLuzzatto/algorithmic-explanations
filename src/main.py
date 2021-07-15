@@ -26,7 +26,7 @@ from src.model.utils import (
 )
 
 logger = logging.getLogger(__file__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 path_config = os.path.join(path_base, "src", "resources")
@@ -35,6 +35,25 @@ path_model_base = os.path.join(path_base, "model")
 
 data = DataConfig(path_config)
 data_config = data.load_config()
+
+
+def print_output(sample, output):
+    
+    
+    score_text, method_text, explanation_text = output
+    
+    separator = '---' * 20
+    
+    print(sample)
+    print(separator)
+    print(score_text)
+    print(separator)
+    print(method_text)
+    print(separator)
+    print(explanation_text)
+    print("\n")
+    
+    
 
 
 for field in ['all']:
@@ -61,11 +80,7 @@ for field in ['all']:
     new_name = f"{field}.player.rating"
     y = average_the_ratings(y, list(y), new_name)
     
-    # score =  y[
-    #     [col for col in list(y) if "player.rating" in col]
-    # ].mean(axis=1).reset_index()
-    
-    
+        
     X, y = shuffle_in_unison(X, y)
             
 
@@ -80,36 +95,41 @@ for field in ['all']:
        encoding="utf-8-sig",
     )
     
-    # Global, Non-contrastive
-    for samples, sparse in samples_dict["permutation"]:
-        permutation = PermutationExplanation(X, y, model, sparse, config)
-        for sample in samples:
-            sample_index = map_index_to_sample(X, sample)
-            method_text, explanation_text = permutation.main(sample_index, sample)
-            print(sample, method_text, explanation_text)
+    show_rating = True
+    
+    # # # Global, Non-contrastive
+    # for samples, sparse in samples_dict["permutation"]:
+    #     permutation = PermutationExplanation(X, y, model, sparse, show_rating, config)
+    #     for sample in samples:
+    #         sample_index = map_index_to_sample(X, sample)
+    #         output = permutation.main(sample_index, sample)
+    #         print_output(sample, output)
 
-    # Local, Non-contrastive
-    for samples, sparse in samples_dict["shapley"]:
-        shapely = ShapleyExplanation(X, y, model, sparse, config)
-        for sample in samples:
-            sample_index = map_index_to_sample(X, sample)
-            method_text, explanation_text = shapely.main(sample_index, sample)
-            print(method_text, explanation_text)
 
-    # Global, Contrastive
-    for samples, sparse in samples_dict["surrogate"]:
-        surrogate = SurrogateModelExplanation(X, y, model, sparse, config)
-        for sample in samples:            
-            sample_index = map_index_to_sample(X, sample)
-            method_text, explanation_text = surrogate.main(sample_index, sample)
-            print(sample, method_text, explanation_text)
+    # # Local, Non-contrastive
+    # for samples, sparse in samples_dict["shapley"]:
+    #     shapely = ShapleyExplanation(X, y, model, sparse, show_rating, config)
+    #     for sample in samples:
+    #         sample_index = map_index_to_sample(X, sample)
+    #         output = shapely.main(sample_index, sample)
+    #         print_output(sample, output)
+
+
+    # # Global, Contrastive
+    # for samples, sparse in samples_dict["surrogate"]:
+    #     surrogate = SurrogateModelExplanation(X, y, model, sparse, show_rating, config)
+    #     for sample in samples:            
+    #         sample_index = map_index_to_sample(X, sample)
+    #         output = surrogate.main(sample_index, sample)
+    #         print_output(sample, output)
             
     # Local, Contrastive
     for  samples, sparse in samples_dict["counterfactual"]:
         counterfactual = CounterfactualExplanation(
-            X, y, model, sparse, config, y_desired=y.values.max()
+            X, y, model, sparse, show_rating, config, y_desired=8.
         )
         for sample in samples:
+            print(sample)
             sample_index = map_index_to_sample(X, sample)
-            method_text, explanation_text = counterfactual.main(sample_index, sample)
-            print(sample, method_text, explanation_text)
+            output = counterfactual.main(sample_index, sample)
+            print_output(sample, output)

@@ -20,8 +20,8 @@ class SurrogateModelExplanation(ExplanationBase):
     Contrastive, global Explanation (global surrogate model)
     """
 
-    def __init__(self, X, y, model, sparse, config: Dict = None, save=True):
-        super(SurrogateModelExplanation, self).__init__(sparse, save, config)
+    def __init__(self, X, y, model, sparse, show_rating: bool = True, config: Dict = None, save=True):
+        super(SurrogateModelExplanation, self).__init__(sparse, show_rating, save, config)
         """
         Init the specific explanation class, the base class is "Explanation"
 
@@ -30,6 +30,7 @@ class SurrogateModelExplanation(ExplanationBase):
             y (np.array): (Test) target values of the samples (samples, 1)
             model (object): trained (sckit-learn) model object
             sparse (bool): boolean value to generate sparse or non sparse explanation
+            show_rating (bool):
             save (bool, optional): boolean value to save the plots. Defaults to True.
            
         Returns:
@@ -42,12 +43,12 @@ class SurrogateModelExplanation(ExplanationBase):
         self.num_features = self.sparse_to_num_features()
 
         self.natural_language_text_empty = (
-            "Applicants received an average score of {:.2f} if the value of {}"
+            "In the automated mechanism's decision-making: {}"
         )
+        self.sentence = "Applicants received an average score of {:.2f} if {}"
 
         self.method_text_empty = (
-            "To help you understand this decision, here is a decision tree "
-            "showing you how the mechanism made its decision:"
+            "To help you understand the automated mechanism's decision, here is a decision tree which explains the automated mechanism's decision-making. The numbers at the end show the score you would likely get if you were in one of these {} groups."
         )
         
         # self.method_text_empty = (
@@ -62,9 +63,15 @@ class SurrogateModelExplanation(ExplanationBase):
         self.plot_name = self.get_plot_name()
 
         self.precision = 2
-        self.num_features = 2
+        
+        
         if sparse:
-            self.num_features = 1
+            self.num_features = 2
+        else:
+            self.num_features = 3
+            
+        self.number_of_groups = 2**self.num_features
+
 
         self.setup()
 
@@ -116,7 +123,10 @@ class SurrogateModelExplanation(ExplanationBase):
         Returns:
             None.
         """
-        return self.method_text_empty
+        return self.method_text_empty.format(
+            self.num_to_str[self.number_of_groups]
+        )
+            
 
     def get_natural_language_text(self):
         """
@@ -127,12 +137,18 @@ class SurrogateModelExplanation(ExplanationBase):
             None.
         """
         surrogateText = SurrogateText(
-            text=self.natural_language_text_empty,
+            text=self.sentence,
             model=self.surrogate_model,
             X=self.X,
             feature_names=self.feature_names,
         )
-        return surrogateText.get_text()
+        
+        sentences = surrogateText.get_text()
+        sentences = self.join_text_with_comma_and_and(sentences)
+
+        return self.natural_language_text_empty.format(
+            sentences
+        )
 
     def setup(self):
         """
@@ -158,8 +174,9 @@ class SurrogateModelExplanation(ExplanationBase):
             None.
         """
         self.get_prediction(sample_index)
+        self.score_text = self.get_score_text(self.number_of_groups)
         self.save_csv(sample)
-        return self.method_text, self.natural_language_text
+        return self.score_text, self.method_text, self.natural_language_text
 
 
 if __name__ == "__main__":

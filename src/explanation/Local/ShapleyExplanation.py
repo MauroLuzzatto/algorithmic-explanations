@@ -27,10 +27,11 @@ class ShapleyExplanation(ExplanationBase):
         y: np.array,
         model: sklearn.base.BaseEstimator,
         sparse: bool,
+        show_rating: bool = True,
         config: Dict = None,
         save: bool = True,
     ) -> None:
-        super(ShapleyExplanation, self).__init__(sparse, save, config)
+        super(ShapleyExplanation, self).__init__(sparse, show_rating, save, config)
         """
         Init the specific explanation class, the base class is "Explanation"
 
@@ -39,6 +40,7 @@ class ShapleyExplanation(ExplanationBase):
             y (np.array): (Test) target values of the samples (samples, 1)
             model (object): trained (sckit-learn) model object
             sparse (bool): boolean value to generate sparse or non sparse explanation
+            show_rating
             save (bool, optional): boolean value to save the plots. Defaults to True.
 
         Returns:
@@ -49,6 +51,16 @@ class ShapleyExplanation(ExplanationBase):
         self.feature_names = list(X)
         self.model = model
         self.num_features = self.sparse_to_num_features()
+        
+        self.natural_language_text_empty = (
+           "In your case, the {} features which contributed most to the automated mechanism`s decision were: {}."
+        )
+
+        self.method_text_empty = (
+            "To help you understand the automated mechanism's decision, here are the {} features which specifically contributed most to how the automated mechanism made its decision in your case. Contribution is on a scale from -1 to 1."
+        )
+
+        
         self.explanation_name = "shapely"
         self.logger = self.setup_logger(self.explanation_name)
 
@@ -183,17 +195,19 @@ class ShapleyExplanation(ExplanationBase):
         """
 
         self.calculate_explanation()
-        feature_values = self.get_feature_values(sample_index)
+        self.feature_values = self.get_feature_values(sample_index)
 
-        self.natural_language_text = self.get_natural_language_text(feature_values)
-        self.method_text = self.get_method_text(feature_values)
+        self.natural_language_text = self.get_natural_language_text(self.feature_values)
+        self.method_text = self.get_method_text(self.feature_values)
 
         self.plot_name = self.get_plot_name(sample)
         self.plot(sample_index)
         self.get_prediction(sample_index)
+        self.score_text = self.get_score_text(self.feature_values)
+        
         self.save_csv(sample)
         self.log_output(sample_index)
-        return self.method_text, self.natural_language_text
+        return self.score_text, self.method_text, self.natural_language_text
 
 
 if __name__ == "__main__":

@@ -47,9 +47,7 @@ class SurrogatePlot(object):
             if add_label:
                 f = self.add_labels(f)
 
-
         f = self.one_hot_encoding_text(f)
-
         return f
     
     
@@ -66,9 +64,9 @@ class SurrogatePlot(object):
         """                   
         values = re.findall(r'\[label="(.*?)"\]', f, re.DOTALL)       
         for value in values:
-        
+                    
             if ' - ' in value:
-                text = value.split('smaller')[0].strip()
+                text = value.split('<=')[0].strip()
                 
                 feature_name = text.split(' - ')[0]
                 feature_value = text.split(' - ')[1]
@@ -83,13 +81,17 @@ class SurrogatePlot(object):
        
         # remove "value = xy" for all cells, except the lowest ones
         values = re.findall(r"value = (\d{0,5}\.\d{0,5})", f)
+        print(values)
         for idx, value in enumerate(values):
-            if (len(values) > 3 and idx in [0, 1, 4]) or (
-                len(values) <= 3 and idx in [0]
+            print(idx, value, len(values))
+            if ((len(values) > 3 and idx in [0, 1, 4]) or 
+                (len(values) == 7 and idx in [0]) or 
+                (len(values) == 15 and idx in [0, 1, 2, 4, 5, 9, 12])
             ):
                 f = re.sub(r"value = {}".format(value), "", f)
 
         f = re.sub(r"value =", "Average score:\n", f)
+        print(f)
         return f
     
     @staticmethod
@@ -99,7 +101,7 @@ class SurrogatePlot(object):
         f = re.sub(r"(samples = \d{0,5})", "", f)
         f = re.sub(r"(\\n\\n)", "\\n", f)
         f = re.sub(r"(\\nvalue)", "value", f)
-        f = re.sub(r"<=", "smaller\nor equal to", f)
+        # f = re.sub(r"<=", "smaller\nor equal to", f)
         return f
     
 

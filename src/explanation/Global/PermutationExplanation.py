@@ -57,7 +57,15 @@ class PermutationExplanation(ExplanationBase):
 
         self.feature_names = list(X)
         self.num_features = self.sparse_to_num_features()
+        
+        self.natural_language_text_empty = (
+           "The {} features which were most important for the automated mechanism's decision-making were: {}."
+        )
 
+        self.method_text_empty = (
+            "To help you understand the automated mechanism's decision, here are the {} features which were most often important for the automated mechanism’s decision-making. Contribution is on a scale from 0 to 1." 
+        )
+        
         self.explanation_name = "permutation"
         self.logger = self.setup_logger(self.explanation_name)
         self.plot_name = self.get_plot_name()
@@ -143,7 +151,7 @@ class PermutationExplanation(ExplanationBase):
         fig = plt.figure(figsize=(6, max(2, int(0.5 * self.num_features))))
         plt.barh(y=y, width=width, height=0.5)
         plt.yticks(y, labels)
-        plt.xlabel("Importance of feature")
+        plt.xlabel("Contribution")
         plt.tight_layout()
         plt.show()
 
@@ -162,9 +170,9 @@ class PermutationExplanation(ExplanationBase):
             None.
         """
         self.calculate_explanation()
-        feature_values = self.get_feature_values()
-        self.natural_language_text = self.get_natural_language_text(feature_values)
-        self.method_text = self.get_method_text(feature_values)
+        self.feature_values = self.get_feature_values()
+        self.natural_language_text = self.get_natural_language_text(self.feature_values)
+        self.method_text = self.get_method_text(self.feature_values)
         self.plot()
 
     def main(self, sample_index, sample):
@@ -180,8 +188,10 @@ class PermutationExplanation(ExplanationBase):
         """
 
         self.get_prediction(sample_index)
+        self.score_text = self.get_score_text(self.num_features)
         self.save_csv(sample)
-        return self.method_text, self.natural_language_text
+        
+        return self.score_text, self.method_text, self.natural_language_text
 
 
 if __name__ == "__main__":

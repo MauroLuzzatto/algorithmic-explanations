@@ -54,7 +54,7 @@ class SurrogateText(object):
             score = self.values[key][0]
             texts.append(self.text.format(score, string))
 
-        return "\n".join([text + "." for text in texts])
+        return " ".join([text + "." for text in texts])
 
     def get_paths(self):
         """
@@ -133,18 +133,17 @@ class SurrogateText(object):
                 if self.children_left[node] == path[index + 1]:
                     
                     if one_hot_feature_bool:
-                        text = f"{feature_name}' is not '{feature_value}'"
+                        text = f"{feature_name}' was not '{feature_value}'"
                     else:
-                        text = f"'{feature_name_per_node}' is smaller or equal to {self.threshold[node]:.2f}"
+                        text = f"'{feature_name_per_node}' was smaller or equal to {self.threshold[node]:.2f}"
                 else:
                     
                     if one_hot_feature_bool:
-                        text = f"'{feature_name}' is '{feature_value}'"
+                        text = f"'{feature_name}' was '{feature_value}'"
                     else:
-                        text = f"'{feature_name_per_node}' is larger than {self.threshold[node]:.2f}"
-                                             
+                        text = f"'{feature_name_per_node}' was larger than {self.threshold[node]:.2f}"
                 mask.append(text)
-        values = [text for text in mask if text]
-
-        return " and ".join(values)
+                
+        sentences = [text for text in mask if text]
+        return sentences
     
