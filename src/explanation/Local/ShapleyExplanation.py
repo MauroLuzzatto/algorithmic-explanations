@@ -53,13 +53,13 @@ class ShapleyExplanation(ExplanationBase):
         self.num_features = self.sparse_to_num_features()
         
         self.natural_language_text_empty = (
-           "In your case, the {} features which contributed most to the automated mechanism`s decision were: {}."
+           "In your case, the {} attributes which contributed most to the automated mechanism`s decision, and their average contributions, were: {}."
         )
 
         self.method_text_empty = (
-            "To help you understand the automated mechanism's decision, here are the {} features which specifically contributed most to how the automated mechanism made its decision in your case. Contribution is on a scale from -1 to 1."
+            "Here are the {} attributes which specifically contributed most to how the automated mechanism made its decision in your case. Contribution is on a scale from -1 to 1."
         )
-
+        self.sentence_text = "'{}' ({:.2f})"
         
         self.explanation_name = "shapely"
         self.logger = self.setup_logger(self.explanation_name)
@@ -197,7 +197,7 @@ class ShapleyExplanation(ExplanationBase):
         self.calculate_explanation()
         self.feature_values = self.get_feature_values(sample_index)
 
-        self.natural_language_text = self.get_natural_language_text(self.feature_values)
+        self.natural_language_text = self.get_natural_language_text(self.feature_values, self.sentence_text)
         self.method_text = self.get_method_text(self.feature_values)
 
         self.plot_name = self.get_plot_name(sample)

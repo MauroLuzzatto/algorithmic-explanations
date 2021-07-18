@@ -4,3 +4,5 @@ from explanation.Local.CounterfactualExplanation import CounterfactualExplanatio
 
 from explanation.Global.PermutationExplanation import PermutationExplanation
 from explanation.Global.SurrogateModelExplanation import SurrogateModelExplanation
+
+from explanation.Global.ControlGroupExplanation import ControlGroupExplanation

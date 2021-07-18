@@ -9,6 +9,9 @@ from shutil import copyfile
 
 import pandas as pd
 
+import sys
+sys.path.insert(1, r'C:\Users\maurol\OneDrive\Dokumente\Python_Scripts\algorithmic-explanations') # based on comments you should use **1 not 0**
+
 from src.model.config import path_base
 from src.model.DataConfig import DataConfig
 from src.model.utils import create_folder
@@ -45,7 +48,7 @@ def rename_images(df_qualtrics, mapping):
             
             path_image = os.path.join(path_reports, f'{field}',  'plot')
             
-            if isinstance(row[column_from], str):
+            if isinstance(row[column_from], str) and row[column_from].endswith('.png'):
                 from_image = os.path.join(path_image, row[column_from])
                 to_image = os.path.join(path_output, row[column_to])
             
@@ -81,7 +84,7 @@ column_list = list(df_qualtrics)
 
 
 df_qualtrics = df_qualtrics.drop(['Email'], axis=1)
-df_qualtrics = df_qualtrics.drop(['TextA', "TextB", 'Treat'], axis=1)
+df_qualtrics = df_qualtrics.drop(['TextA', "TextB", 'Treat', 'Text0'], axis=1)
 df_qualtrics['Pic'] = df_qualtrics['ParticipantToken'] + '.png'
 
 
@@ -111,7 +114,7 @@ for field in ['all']:
         sep=";",
         encoding="utf-8",
         index_col=0,
-        usecols = ['Entry ID', 'method', 'explanation', 'plot']
+        usecols = ['Entry ID', 'score_text', 'method', 'explanation', 'plot']
     )
     
     df[field] = df['explanation']
@@ -121,26 +124,20 @@ for field in ['all']:
     
     df_qualtrics = pd.merge(
         df_qualtrics,  
-        df[['method', field, field + '_plot']], 
+        df[['method', 'score_text', field, field + '_plot']], 
         left_on='Entry ID', 
         right_index=True,
         how='left'
     )
 
 
-
-
-
 df_qualtrics = rename_columns(df_qualtrics, mapping)
-
 rename_images(df_qualtrics, mapping)
 
 for _, to_col in mapping:
     # replace linebreak with html break <br>
-    df_qualtrics[f'Text{to_col}'] = df_qualtrics[f'Text{to_col}'].str.replace(r'\n', '<br>')
-    df_qualtrics[f'Text{to_col}'] = df_qualtrics[f'Text{to_col}'].str.replace(r'\\n', '<br>')
-
-
+    df_qualtrics[f'Text{to_col}'] = df_qualtrics[f'Text{to_col}'].str.replace(r'\n', ' <br> ')
+    df_qualtrics[f'Text{to_col}'] = df_qualtrics[f'Text{to_col}'].str.replace(r'\\n', ' <br> ')
 
 
 df_treatment = pd.read_csv(
@@ -151,7 +148,7 @@ df_treatment = pd.read_csv(
 
 df_qualtrics = pd.merge(
     df_qualtrics,  df_treatment, 
-    left_on='Entry ID', right_on='Entry ID'
+    left_on='Entry ID', right_on='Entry ID', how='right'
 )
 
 
@@ -159,8 +156,9 @@ df_qualtrics.rename(
     columns={
         'treat': 'Treat', 
         'FileC': 'Pic',
-        'method': 'TextB',
-        'TextC': 'TextA'
+        'method': 'TextA',
+        'TextC': 'TextB',
+        'score_text': 'Text0'
         },
     inplace=True
 )
@@ -168,6 +166,9 @@ df_qualtrics.rename(
 
 
 df_output = df_qualtrics[column_list]
+df_output.sort_values('Treat', inplace=True)
+
+
 df_output.to_excel(
     os.path.join(path_base, 'qualtrics', 'AlgorithmicExplanation_with_explanations.xlsx'),
     index=False

@@ -43,27 +43,21 @@ class SurrogateModelExplanation(ExplanationBase):
         self.num_features = self.sparse_to_num_features()
 
         self.natural_language_text_empty = (
-            "In the automated mechanism's decision-making: {}"
+            "In the automated mechanism's assignment of ratings: {}"
         )
-        self.sentence = "Applicants received an average score of {:.2f} if {}"
 
         self.method_text_empty = (
-            "To help you understand the automated mechanism's decision, here is a decision tree which explains the automated mechanism's decision-making. The numbers at the end show the score you would likely get if you were in one of these {} groups."
+            "Here is a decision tree which explains how the automated mechanism assigned ratings. The numbers at the end show the rating (from 1 to 10) you would likely get if you were in one of these {} groups."
         )
         
-        # self.method_text_empty = (
-        #     "To help you understand the automated mechanism's decision, "
-        #     "here is a decision tree which shows you the {} features which " 
-        #     "were most important for the automated mechanism's decision-making:"
-        # )
+        self.sentence = "Applicants received an average rating of {:.2f} if {}"
 
 
         self.explanation_name = "surrogate"
         self.logger = self.setup_logger(self.explanation_name)
-        self.plot_name = self.get_plot_name()
+        self.plot_name = self.get_plot_name(str(self.show_rating))
 
         self.precision = 2
-        
         
         if sparse:
             self.num_features = 2
@@ -71,8 +65,6 @@ class SurrogateModelExplanation(ExplanationBase):
             self.num_features = 3
             
         self.number_of_groups = 2**self.num_features
-
-
         self.setup()
 
     def calculate_explanation(self, max_leaf_nodes=100):
@@ -144,8 +136,6 @@ class SurrogateModelExplanation(ExplanationBase):
         )
         
         sentences = surrogateText.get_text()
-        sentences = self.join_text_with_comma_and_and(sentences)
-
         return self.natural_language_text_empty.format(
             sentences
         )

@@ -64,19 +64,25 @@ class ExplanationBase(ExplanationMixin):
         )
         
         self.score_text_empty = (
-            "The automated mechanism analyzed hundreds of applications and used {} features to produce a rating for each applicant between 1 and 10."            
+            "The automated mechanism analyzed hundreds of applications and used {} attributes to produce a rating for each applicant between 1 and 10."
             )
          
         self.score_text_extension = (
-              "Your application rating was {:.1f}."
+              "Your rating was {:.1f}."
           )
-                
+        
         if self.show_rating:   
-            self.score_text_empty + self.score_text_extension
-                  
+            self.score_text_empty = ' '.join([self.score_text_empty, self.score_text_extension])
+                        
 
     def setup_paths(self):
+        """
+        
 
+        Returns:
+            None.
+
+        """
         self.path = os.path.join(os.path.dirname(os.getcwd()), "reports", self.folder)
         self.path_plot = create_folder(os.path.join(self.path, "plot"))
         self.path_result = create_folder(os.path.join(self.path, "results"))
@@ -96,7 +102,7 @@ class ExplanationBase(ExplanationMixin):
         raise NotImplementedError("Subclasses should implement this!")
 
     def sparse_to_num_features(
-        self, sparse_features: int = 3, dense_features: int = 6
+        self, sparse_features: int = 4, dense_features: int = 8
     ) -> int:
         """
         Convert sparse bool into the number of selected features
@@ -133,7 +139,7 @@ class ExplanationBase(ExplanationMixin):
         """
         return self.method_text_empty.format(self.num_to_str[len(feature_values)])
 
-    def get_sentences(self, feature_values: list) -> None:
+    def get_sentences(self, feature_values: list, sentence:str) -> None:
         """
         Generate the output sentences
 
@@ -143,8 +149,6 @@ class ExplanationBase(ExplanationMixin):
             None
         """
 
-        sentence = "'{}' with an average contribution of {:.2f}"
-
         values = []
         for feature_name, feature_value in feature_values:
             value = sentence.format(feature_name, feature_value)
@@ -153,7 +157,7 @@ class ExplanationBase(ExplanationMixin):
         sentences = self.join_text_with_comma_and_and(values)
         return sentences
 
-    def get_natural_language_text(self, feature_values):
+    def get_natural_language_text(self, feature_values, sentence_text):
         """
         Generate the output of the explanation in natural language.
 
@@ -162,17 +166,25 @@ class ExplanationBase(ExplanationMixin):
 
         """
 
-        sentences = self.get_sentences(feature_values)
+        sentences = self.get_sentences(feature_values, sentence_text)
         return self.natural_language_text_empty.format(
             self.num_to_str[len(feature_values)], sentences
         )
     
     def get_score_text(self, feature_values: list):
+        """
         
-        number_data_features =  self.X.shape[1]        
-        
+
+        Args:
+            feature_values (list): DESCRIPTION.
+
+        Returns:
+            TYPE: DESCRIPTION.
+
+        """
+        number_of_features =  self.X.shape[1]        
         return self.score_text_empty.format(
-           number_data_features, self.prediction
+           number_of_features, self.prediction
         )
         
 

@@ -241,7 +241,7 @@ def create_treatment_dataframe(samples_dict):
     number = 1
     treatment_groups = []
     for key in samples_dict.keys():
-        for samples, sparse in samples_dict[key]:
+        for samples, sparse, show_score in samples_dict[key]:
             
             for sample in samples:
                 treatment_groups.append(
@@ -249,6 +249,7 @@ def create_treatment_dataframe(samples_dict):
                         {'Entry ID': sample,
                          'explanation_type': key,
                          'sparse': sparse,
+                         'show_score': show_score,
                          'treat': number
                          }
                     )
@@ -260,30 +261,42 @@ def create_treatment_dataframe(samples_dict):
 def experiment_setup(X):
     
     
+    
     samples = X.index.tolist()
-    samples_per_split = int(len(samples)/9.)
+    samples_per_split = 24
         
     samples_dict = {
         "permutation": [
-            (samples[0*samples_per_split:1*samples_per_split], True), 
-            (samples[1*samples_per_split:2*samples_per_split], False)
+            # list of samples, sparse, show_score
+            (samples[0*samples_per_split:1*samples_per_split], True, True),
+            (samples[1*samples_per_split:2*samples_per_split], True, False), 
+            (samples[2*samples_per_split:3*samples_per_split], False, True),
+            (samples[3*samples_per_split:4*samples_per_split], False, False)
         ],
         "shapley": [
-            (samples[2*samples_per_split:3*samples_per_split], True), 
-            (samples[3*samples_per_split:4*samples_per_split], False)
+            (samples[4*samples_per_split:5*samples_per_split], True, True), 
+            (samples[5*samples_per_split:6*samples_per_split], True, False), 
+            (samples[6*samples_per_split:7*samples_per_split], False, True),
+            (samples[7*samples_per_split:8*samples_per_split], False, False)
             
         ],
         "surrogate": [
-            (samples[4*samples_per_split:5*samples_per_split], True), 
-            (samples[5*samples_per_split:6*samples_per_split], False)
+            (samples[8*samples_per_split:9*samples_per_split], True, True), 
+            (samples[9*samples_per_split:10*samples_per_split], True, False), 
+            (samples[10*samples_per_split:11*samples_per_split], False, True),
+            (samples[11*samples_per_split:12*samples_per_split], False, False)
             
         ],
         "counterfactual": [
-            (samples[6*samples_per_split:7*samples_per_split], True), 
-            (samples[7*samples_per_split:8*samples_per_split], False)
+            (samples[12*samples_per_split:13*samples_per_split], True, True), 
+            (samples[13*samples_per_split:14*samples_per_split], True, False), 
+            (samples[14*samples_per_split:15*samples_per_split], False, True),
+            (samples[15*samples_per_split:16*samples_per_split], False, False)
         ],
-        "control group":[
-            (samples[8*samples_per_split:], None), 
+        "control_group":[
+            (samples[16*samples_per_split:16*samples_per_split+19], None, True), 
+            (samples[16*samples_per_split+19:], None, False), 
+
         ]
     }
        

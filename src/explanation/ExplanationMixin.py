@@ -47,10 +47,10 @@ class ExplanationMixin:
         if len(values) > 2:
             last_value = values[-1]
             values = ", ".join(values[:-1])
-            text = values + " and " + last_value
+            text = values + ", and " + last_value
 
         else:
-            text = " and ".join(values)
+            text = ", and ".join(values)
         return text
 
     def get_number_to_string_dict(self) -> None:

@@ -66,24 +66,16 @@ class CounterfactualExplanation(ExplanationBase):
         self.natural_language_text_empty = (
             "In your case, the automated mechanism would have likely awarded you the scholarship {}."
         )
-
-        # self.method_text_empty = (
-        #     "To help you understand this decision, "
-        #     "here is an example of another, similar applicant where the "
-        #     "mechanism would have decided differently:"
-        # )
-        
         
         self.method_text_empty = (
-            "To help you understand how the automated mechanism made its decision in your case, here are {} features which, if changed, the automated mechanism would have decided differently. If your application had changed to the one on the right ('The Winning You'), "
-            )
+            "Here are {} important attributes from your application which, if changed, would have altered the decision made by the automated mechanism in your case. If your application had changed to the one on the right ('The Winning You'),"            
+           )
         
         if self.show_rating:    
-             self.method_text_empty + "your rating would have increased to {}."
+             self.method_text_empty = ' '.join([self.method_text_empty, "your rating would have increased to {:.1f}."])
         else:
-             self.method_text_empty + "you would have likely won the scholarship."
+             self.method_text_empty = ' '.join([self.method_text_empty, "you would have likely won the scholarship."])
         
-            
         if y_desired is None:
             y_desired = y.values.max()
             
@@ -108,33 +100,54 @@ class CounterfactualExplanation(ExplanationBase):
             x_counter_factual (TYPE): DESCRIPTION.
 
         """
+        
         x_ref = self.X.values[sample, :]
-        
-        for lammbda in np.arange(0, 10000, 0.1):            
 
-            x_counter_factual = create_counterfactual(
-                x_reference=x_ref,
-                y_desired=self.y_desired,
-                model=self.model,
-                X_dataset=self.X.values,
-                y_desired_proba=None,
-                lammbda=lammbda
-            )
-                        
-            y_counter_factual =  self.model.predict(x_counter_factual.reshape(1, -1))[0]
-           
-            self.logger.info(f'lambda: {lammbda}')
-            self.logger.info(f'diff:  {np.abs(y_counter_factual - self.y_desired)}')
-            self.logger.info(f'pred: {y_counter_factual}, desired: {self.y_desired}')
-            self.logger.info('---'*15)
-
-            if not np.abs(y_counter_factual - self.y_desired) > 1.:
-                break
+        # TODO: add the best example
+        if self.prediction >= 8:
+            x_counter_factual = np.array([
+                5.0, 4.0, 3.9, 34.0, 1540.0, 0.0, 0.0, 0.0, 
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+                0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 
+                1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 
+                1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+                0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 9.5])
             
-        
+            y_counter_factual =  self.model.predict(x_counter_factual.reshape(1, -1))[0]
+            lammbda = None
+            
+
+        else:
+            
+            for lammbda in np.arange(0, 10000, 0.1):            
+    
+                x_counter_factual = create_counterfactual(
+                    x_reference=x_ref,
+                    y_desired=self.y_desired,
+                    model=self.model,
+                    X_dataset=self.X.values,
+                    y_desired_proba=None,
+                    lammbda=lammbda
+                )
+                            
+                y_counter_factual =  self.model.predict(x_counter_factual.reshape(1, -1))[0]
+               
+                self.logger.info(f'lambda: {lammbda}')
+                self.logger.info(f'diff:  {np.abs(y_counter_factual - self.y_desired)}')
+                self.logger.info(f'y_counterfactual: {y_counter_factual:.2f}, desired: {self.y_desired:.2f}, y_pred {self.prediction:.2f}')
+                self.logger.info('---'*15)
+    
+                if not np.abs(y_counter_factual - self.y_desired) > 1. \
+                    and (y_counter_factual - self.prediction) > 0.4:
+                    break
+                
         self.logger.info(f'final lambda: {lammbda}')
         self.logger.info(f'final diff:  {np.abs(y_counter_factual - self.y_desired)}')
-        self.logger.info(f'pred: {y_counter_factual}, desired: {self.y_desired}')
+        self.logger.info(f'y_counterfactual: {y_counter_factual}, desired: {self.y_desired}, y_pred {self.prediction}')
         self.y_counter_factual = y_counter_factual
 
         self.log_output(sample, x_ref, x_counter_factual)
@@ -177,19 +190,13 @@ class CounterfactualExplanation(ExplanationBase):
 
         """
         x_created = x_ref.reshape(1, -1).copy()
-        # print(x_counter_factual.reshape(1, -1)[0, ii])
-        
         old_value = x_created[0, ii]
         new_value = x_counter_factual.reshape(1, -1)[0, ii]
-
         # assign new value
         x_created[0, ii] = x_counter_factual.reshape(1, -1)[0, ii]
-        
-        
         self.logger.debug(
             f"old_value: {old_value} -- new_value: {new_value}"
-        )
-        
+        )        
         pred_new = self.model.predict(x_created)[0]
         return pred_new
         
@@ -259,7 +266,12 @@ class CounterfactualExplanation(ExplanationBase):
         # reorder dataframe according the the feature importance
         self.df = self.df.loc[self.feature_sort, :]
         
-        self.df["difference of the new feature in the prediction"].plot(kind='barh', figsize=(6,15))
+        try:
+            self.df["difference of the new feature in the prediction"][
+                self.df["difference of the new feature in the prediction"] != 0
+            ].plot(kind='barh', figsize=(3, 5))
+        except IndexError as e:
+            print(e)
 
     def format_features_for_plot(self):
         """
@@ -303,9 +315,13 @@ class CounterfactualExplanation(ExplanationBase):
         
         self.format_features_for_plot()
         array_subset = self.df[columns].values[:self.num_features]
-        score_row = np.array([f'{self.prediction:.1f}', f'{self.y_counter_factual:.1f}']).reshape(1, -1)
-        array_subset = np.append(array_subset, score_row, axis=0)
+        rowLabels = list(self.df.index)[:self.num_features]
         
+        if self.show_rating:
+            score_row = np.array([f'{self.prediction:.1f}', f'{self.y_counter_factual:.1f}']).reshape(1, -1)
+            array_subset = np.append(array_subset, score_row, axis=0)
+            rowLabels = rowLabels + ['Application rating']
+            
         fig, ax = plt.subplots()
         fig.patch.set_visible(False)
         ax.axis("off")
@@ -314,7 +330,7 @@ class CounterfactualExplanation(ExplanationBase):
         table = ax.table(
             cellText=array_subset,
             colLabels=colLabels,
-            rowLabels=list(self.df.index)[:self.num_features] + ['Application score'],
+            rowLabels=rowLabels,
             loc="center",
             cellLoc="center",
         )
@@ -322,11 +338,11 @@ class CounterfactualExplanation(ExplanationBase):
         table.set_fontsize(12)
         table.scale(1.25, 2)
         
-
-        # make the last row bold
-        for (row, col), cell in table.get_celld().items():
-            if row == array_subset.shape[0]:
-                cell.set_text_props(fontproperties=FontProperties(weight='bold'))
+        if self.show_rating:
+            # make the last row bold
+            for (row, col), cell in table.get_celld().items():
+                if row == array_subset.shape[0]:
+                    cell.set_text_props(fontproperties=FontProperties(weight='bold'))
                 
         plt.axis("off")
         plt.grid("off")
@@ -356,7 +372,9 @@ class CounterfactualExplanation(ExplanationBase):
         Returns:
             None.
         """
-        return self.method_text_empty.format(self.num_features, self.y_counter_factual)
+        return self.method_text_empty.format(
+             self.num_to_str[self.num_features], self.y_counter_factual
+        )
 
     def get_natural_language_text(self):
         """
@@ -369,7 +387,7 @@ class CounterfactualExplanation(ExplanationBase):
         feature_values = self.df["Counter Factual Values"].tolist()[: self.num_features]
         feature_names = list(self.df.index)[: self.num_features]
 
-        sentence = "if your '{}' was {}"
+        sentence = "your '{}' was {}"
 
         sentences = []
         for feature_name, feature_value in zip(feature_names, feature_values):
@@ -388,7 +406,7 @@ class CounterfactualExplanation(ExplanationBase):
             self.logger.debug(f"{mode}: {sentence_filled}")
             sentences.append(sentence_filled)
 
-        sentences = self.join_text_with_comma_and_and(sentences)
+        sentences = "if " + self.join_text_with_comma_and_and(sentences)
         return self.natural_language_text_empty.format(sentences)
 
     @staticmethod
@@ -429,6 +447,8 @@ class CounterfactualExplanation(ExplanationBase):
             None.
         """
 
+        self.get_prediction(sample_index)
+
         x_ref, x_counter_factual = self.calculate_explanation(sample_index)
         self.get_feature_importance(x_ref, x_counter_factual)
         self.get_feature_values(x_ref, x_counter_factual)
@@ -437,7 +457,6 @@ class CounterfactualExplanation(ExplanationBase):
         self.method_text = self.get_method_text()
         
         
-        self.get_prediction(sample_index)
 
         self.plot_name = self.get_plot_name(sample)
         self.plot()

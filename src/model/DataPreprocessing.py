@@ -388,7 +388,7 @@ if __name__ == "__main__":
         df_ratings, how="outer", left_index=True, right_index=True
     )
 
-    df_final["Essay score"] = df_final[
+    df_final["Essay grade"] = df_final[
         [col for col in list(df_final) if "essay.player.rating" in col]
     ].mean(axis=1)
     

@@ -33,10 +33,11 @@ class PermutationExplanation(ExplanationBase):
         y: np.array,
         model: sklearn.base.BaseEstimator,
         sparse: bool,
+        show_rating: bool = True,
         config: Dict = None,
         save: bool = True,
     ):
-        super(PermutationExplanation, self).__init__(sparse, save, config)
+        super(PermutationExplanation, self).__init__(sparse, show_rating, save, config)
         """
         Init the specific explanation class, the base class is "Explanation"
 
@@ -45,6 +46,7 @@ class PermutationExplanation(ExplanationBase):
             y (np.array): (Test) target values of the samples (samples, 1)
             model (object): trained (sckit-learn) model object
             sparse (bool): boolean value to generate sparse or non sparse explanation
+            show_rating
             save (bool, optional): boolean value to save the plots. Defaults to True.
            
         Returns:
@@ -59,13 +61,15 @@ class PermutationExplanation(ExplanationBase):
         self.num_features = self.sparse_to_num_features()
         
         self.natural_language_text_empty = (
-           "The {} features which were most important for the automated mechanism's decision-making were: {}."
+           "The {} attributes which were most important for the automated mechanism's assignment of ratings and their average contributions were: {}."
         )
 
         self.method_text_empty = (
-            "To help you understand the automated mechanism's decision, here are the {} features which were most often important for the automated mechanism’s decision-making. Contribution is on a scale from 0 to 1." 
+            "Here are the {} attributes which were most important for the automated mechanism’s assignment of ratings. Contribution is on a scale from 0 to 1."
         )
         
+        self.sentence_text = "'{}' ({:.2f})"
+
         self.explanation_name = "permutation"
         self.logger = self.setup_logger(self.explanation_name)
         self.plot_name = self.get_plot_name()
@@ -171,7 +175,7 @@ class PermutationExplanation(ExplanationBase):
         """
         self.calculate_explanation()
         self.feature_values = self.get_feature_values()
-        self.natural_language_text = self.get_natural_language_text(self.feature_values)
+        self.natural_language_text = self.get_natural_language_text(self.feature_values, self.sentence_text)
         self.method_text = self.get_method_text(self.feature_values)
         self.plot()
 

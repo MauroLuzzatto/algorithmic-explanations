@@ -7,8 +7,10 @@ Created on Sat Dec 19 11:41:28 2020
 
 import numpy as np
 
+from explanation.ExplanationMixin import ExplanationMixin
 
-class SurrogateText(object):
+
+class SurrogateText(ExplanationMixin):
     """"""
 
     def __init__(self, text: str, model: object, X: np.array, feature_names: list):
@@ -50,9 +52,10 @@ class SurrogateText(object):
 
         texts = []
         for key in paths:
-            string = self.get_rule(paths[key])
+            sentences = self.get_rule(paths[key])
+            sentences = self.join_text_with_comma_and_and(sentences)
             score = self.values[key][0]
-            texts.append(self.text.format(score, string))
+            texts.append(self.text.format(score, sentences))
 
         return " ".join([text + "." for text in texts])
 
@@ -135,13 +138,13 @@ class SurrogateText(object):
                     if one_hot_feature_bool:
                         text = f"{feature_name}' was not '{feature_value}'"
                     else:
-                        text = f"'{feature_name_per_node}' was smaller or equal to {self.threshold[node]:.2f}"
+                        text = f"'{feature_name_per_node}' was less than {self.threshold[node]:.2f}"
                 else:
                     
                     if one_hot_feature_bool:
                         text = f"'{feature_name}' was '{feature_value}'"
                     else:
-                        text = f"'{feature_name_per_node}' was larger than {self.threshold[node]:.2f}"
+                        text = f"'{feature_name_per_node}' was greater than {self.threshold[node]:.2f}"
                 mask.append(text)
                 
         sentences = [text for text in mask if text]
