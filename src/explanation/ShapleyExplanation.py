@@ -13,7 +13,7 @@ import pandas as pd
 import shap
 import sklearn
 
-from explanation.ExplanationBase import ExplanationBase
+from src.explanation.ExplanationBase import ExplanationBase
 
 
 class ShapleyExplanation(ExplanationBase):
@@ -31,7 +31,9 @@ class ShapleyExplanation(ExplanationBase):
         config: Dict = None,
         save: bool = True,
     ) -> None:
-        super(ShapleyExplanation, self).__init__(sparse, show_rating, save, config)
+        super(ShapleyExplanation, self).__init__(
+            sparse, show_rating, save, config
+        )
         """
         Init the specific explanation class, the base class is "Explanation"
 
@@ -51,16 +53,20 @@ class ShapleyExplanation(ExplanationBase):
         self.feature_names = list(X)
         self.model = model
         self.num_features = self.sparse_to_num_features()
-        
+
         self.natural_language_text_empty = (
-           "In your case, the {} attributes which contributed most to the automated mechanism`s decision, and their average contributions, were: {}."
+            "In your case, the {} attributes which contributed most to the"
+            " automated mechanism`s decision, and their average contributions,"
+            " were: {}."
         )
 
         self.method_text_empty = (
-            "Here are the {} attributes which specifically contributed most to how the automated mechanism made its decision in your case. Contribution is on a scale from -1 to 1."
+            "Here are the {} attributes which specifically contributed most to"
+            " how the automated mechanism made its decision in your case."
+            " Contribution is on a scale from -1 to 1."
         )
         self.sentence_text = "'{}' ({:.2f})"
-        
+
         self.explanation_name = "shapely"
         self.logger = self.setup_logger(self.explanation_name)
 
@@ -108,7 +114,9 @@ class ShapleyExplanation(ExplanationBase):
         Returns:
             None.
         """
-        return np.sum(self.shap_values[sample, :]) + self.explainer.expected_value
+        return (
+            np.sum(self.shap_values[sample, :]) + self.explainer.expected_value
+        )
 
     def plot(self, sample: int = 0) -> None:
         """
@@ -137,7 +145,8 @@ class ShapleyExplanation(ExplanationBase):
 
         if self.save:
             fig.savefig(
-                os.path.join(self.path_plot, self.plot_name), bbox_inches="tight"
+                os.path.join(self.path_plot, self.plot_name),
+                bbox_inches="tight",
             )
 
     def plot_shape(self, sample: int = 0) -> None:
@@ -177,7 +186,9 @@ class ShapleyExplanation(ExplanationBase):
             None.
         """
         self.logger.info(
-            "The expected_value was: {:.2f}".format(self.explainer.expected_value)
+            "The expected_value was: {:.2f}".format(
+                self.explainer.expected_value
+            )
         )
         self.logger.info("The y_value was: {}".format(self.y.values[sample][0]))
         self.logger.info("The predicted value was: {}".format(self.prediction))
@@ -197,14 +208,16 @@ class ShapleyExplanation(ExplanationBase):
         self.calculate_explanation()
         self.feature_values = self.get_feature_values(sample_index)
 
-        self.natural_language_text = self.get_natural_language_text(self.feature_values, self.sentence_text)
+        self.natural_language_text = self.get_natural_language_text(
+            self.feature_values, self.sentence_text
+        )
         self.method_text = self.get_method_text(self.feature_values)
 
         self.plot_name = self.get_plot_name(sample)
         self.plot(sample_index)
         self.get_prediction(sample_index)
         self.score_text = self.get_score_text(self.feature_values)
-        
+
         self.save_csv(sample)
         self.log_output(sample_index)
         return self.score_text, self.method_text, self.natural_language_text

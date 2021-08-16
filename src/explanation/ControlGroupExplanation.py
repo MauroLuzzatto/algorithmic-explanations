@@ -18,7 +18,8 @@ import numpy as np
 import pandas as pd
 import sklearn
 
-from explanation.ExplanationBase import ExplanationBase
+from src.explanation.ExplanationBase import ExplanationBase
+
 
 class ControlGroupExplanation(ExplanationBase):
     """
@@ -35,7 +36,9 @@ class ControlGroupExplanation(ExplanationBase):
         config: Dict = None,
         save: bool = True,
     ):
-        super(ControlGroupExplanation, self).__init__(sparse, show_rating, save, config)
+        super(ControlGroupExplanation, self).__init__(
+            sparse, show_rating, save, config
+        )
         """
         Init the specific explanation class, the base class is "Explanation"
 
@@ -56,14 +59,13 @@ class ControlGroupExplanation(ExplanationBase):
         self.model = model
 
         self.num_features = self.sparse_to_num_features()
-        
+
         self.natural_language_text = None
         self.method_text = None
-         
+
         self.explanation_name = "control_group"
         self.logger = self.setup_logger(self.explanation_name)
-        self.plot_name = 'control_group'
-
+        self.plot_name = "control_group"
 
     def main(self, sample_index, sample):
         """
@@ -80,5 +82,5 @@ class ControlGroupExplanation(ExplanationBase):
         self.get_prediction(sample_index)
         self.score_text = self.get_score_text(self.num_features)
         self.save_csv(sample)
-        
+
         return self.score_text, self.method_text, self.natural_language_text

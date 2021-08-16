@@ -126,7 +126,9 @@ for file in os.listdir(os.path.join(path_ratings, folder_name)):
         # plt.show()
 
         dict_df[player].to_csv(
-            os.path.join(path_save, f"{player}_{file}.csv"), sep=",", encoding="utf-8"
+            os.path.join(path_save, f"{player}_{file}.csv"),
+            sep=",",
+            encoding="utf-8",
         )
 
     df_new = pd.DataFrame(list_data).sort_values("player.applicant_id")
@@ -149,12 +151,16 @@ for file in os.listdir(os.path.join(path_ratings, folder_name)):
 
     df_rating.columns = columns
     df_rating = df_rating.rename(
-        columns={"player.applicant_name": "name", "player.applicant_id": "Entry ID"}
+        columns={
+            "player.applicant_name": "name",
+            "player.applicant_id": "Entry ID",
+        }
     )
 
-
     df_rating.to_csv(
-        os.path.join(path_save, f"ratings_{file}.csv"), sep=",", encoding="utf-8"
+        os.path.join(path_save, f"ratings_{file}.csv"),
+        sep=",",
+        encoding="utf-8",
     )
 
     df_list.append(df_rating)

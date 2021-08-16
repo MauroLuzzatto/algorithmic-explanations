@@ -89,7 +89,9 @@ class ModelClass(object):
         else:
             folder_name = self.time_stamp
 
-        self.path_model = create_folder(os.path.join(self.path_model, folder_name))
+        self.path_model = create_folder(
+            os.path.join(self.path_model, folder_name)
+        )
         self.path_save = create_folder(os.path.join(self.path_model, "results"))
 
     def get_train_test_split(
@@ -221,7 +223,9 @@ class ModelClass(object):
         )
 
         self.logger.info(f"Training score: \n{random_search.best_score_:.2f}")
-        self.logger.info(f"Best hyperparameters: \n{random_search.best_params_}")
+        self.logger.info(
+            f"Best hyperparameters: \n{random_search.best_params_}"
+        )
 
     def full_data_training(self) -> None:
         """
@@ -262,7 +266,9 @@ class ModelClass(object):
             self.logger.info(f"{method.__name__}: {score:.2f}")
 
         pd.DataFrame(results, index=[self.time_stamp]).to_csv(
-            os.path.join(self.path_save, "best_score.csv"), float_format="%.2f", sep=";"
+            os.path.join(self.path_save, "best_score.csv"),
+            float_format="%.2f",
+            sep=";",
         )
 
     def save_pickle(self) -> None:
@@ -275,7 +281,9 @@ class ModelClass(object):
         """
         name = f"{self.save_name}.pickle"
         with open(os.path.join(self.path_model, name), "wb") as handle:
-            pickle.dump(self.final_model, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            pickle.dump(
+                self.final_model, handle, protocol=pickle.HIGHEST_PROTOCOL
+            )
 
         self.logger.info(f"Save: {os.path.join(self.path_model, name)}")
 

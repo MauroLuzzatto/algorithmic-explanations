@@ -1,8 +1,8 @@
 # from src.explanation.ExplanationBase import Explanation
-from explanation.Local.ShapleyExplanation import ShapleyExplanation
-from explanation.Local.CounterfactualExplanation import CounterfactualExplanation
+from src.explanation.ShapleyExplanation import ShapleyExplanation
+from src.explanation.CounterfactualExplanation import CounterfactualExplanation
 
-from explanation.Global.PermutationExplanation import PermutationExplanation
-from explanation.Global.SurrogateModelExplanation import SurrogateModelExplanation
+from src.explanation.PermutationExplanation import PermutationExplanation
+from src.explanation.SurrogateModelExplanation import SurrogateModelExplanation
 
-from explanation.Global.ControlGroupExplanation import ControlGroupExplanation
+from src.explanation.ControlGroupExplanation import ControlGroupExplanation

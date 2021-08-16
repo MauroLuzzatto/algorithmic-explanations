@@ -10,9 +10,9 @@ import graphviz
 import pandas as pd
 from sklearn.tree import DecisionTreeRegressor
 
-from explanation.ExplanationBase import ExplanationBase
-from explanation.Global.SurrogatePlot import SurrogatePlot
-from explanation.Global.SurrogateText import SurrogateText
+from src.explanation.ExplanationBase import ExplanationBase
+from src.explanation.SurrogatePlot import SurrogatePlot
+from src.explanation.SurrogateText import SurrogateText
 
 
 class SurrogateModelExplanation(ExplanationBase):
@@ -20,8 +20,19 @@ class SurrogateModelExplanation(ExplanationBase):
     Contrastive, global Explanation (global surrogate model)
     """
 
-    def __init__(self, X, y, model, sparse, show_rating: bool = True, config: Dict = None, save=True):
-        super(SurrogateModelExplanation, self).__init__(sparse, show_rating, save, config)
+    def __init__(
+        self,
+        X,
+        y,
+        model,
+        sparse,
+        show_rating: bool = True,
+        config: Dict = None,
+        save=True,
+    ):
+        super(SurrogateModelExplanation, self).__init__(
+            sparse, show_rating, save, config
+        )
         """
         Init the specific explanation class, the base class is "Explanation"
 
@@ -47,24 +58,26 @@ class SurrogateModelExplanation(ExplanationBase):
         )
 
         self.method_text_empty = (
-            "Here is a decision tree which explains how the automated mechanism assigned ratings. The numbers at the end show the rating (from 1 to 10) you would likely get if you were in one of these {} groups."
+            "Here is a decision tree which explains how the automated mechanism"
+            " assigned ratings. The numbers at the end show the rating (from 1"
+            " to 10) you would likely get if you were in one of these {}"
+            " groups."
         )
-        
-        self.sentence = "Applicants received an average rating of {:.2f} if {}"
 
+        self.sentence = "Applicants received an average rating of {:.2f} if {}"
 
         self.explanation_name = "surrogate"
         self.logger = self.setup_logger(self.explanation_name)
         self.plot_name = self.get_plot_name(str(self.show_rating))
 
         self.precision = 2
-        
+
         if sparse:
             self.num_features = 2
         else:
             self.num_features = 3
-            
-        self.number_of_groups = 2**self.num_features
+
+        self.number_of_groups = 2 ** self.num_features
         self.setup()
 
     def calculate_explanation(self, max_leaf_nodes=100):
@@ -93,18 +106,19 @@ class SurrogateModelExplanation(ExplanationBase):
             feature_names=self.feature_names,
             precision=self.precision,
         )
-        
+
         name, extension = os.path.splitext(self.plot_name)
 
         graphviz.Source(
             dot_file,
             filename=os.path.join(self.path_plot, name),
-            format=extension.replace('.', ''),
+            format=extension.replace(".", ""),
         ).view()
 
         if self.save:
             with open(
-                os.path.join(self.path_plot, "{}.dot".format(self.plot_name)), "w"
+                os.path.join(self.path_plot, "{}.dot".format(self.plot_name)),
+                "w",
             ) as file:
                 file.write(dot_file)
 
@@ -118,7 +132,6 @@ class SurrogateModelExplanation(ExplanationBase):
         return self.method_text_empty.format(
             self.num_to_str[self.number_of_groups]
         )
-            
 
     def get_natural_language_text(self):
         """
@@ -134,11 +147,9 @@ class SurrogateModelExplanation(ExplanationBase):
             X=self.X,
             feature_names=self.feature_names,
         )
-        
+
         sentences = surrogateText.get_text()
-        return self.natural_language_text_empty.format(
-            sentences
-        )
+        return self.natural_language_text_empty.format(sentences)
 
     def setup(self):
         """

@@ -11,9 +11,9 @@ from typing import Dict
 
 import pandas as pd
 
-from explanation.ExplanationMixin import ExplanationMixin
-from explanation.Logger import Logger
-from explanation.utils import create_folder
+from src.explanation.ExplanationMixin import ExplanationMixin
+from src.explanation.Logger import Logger
+from src.explanation.utils import create_folder
 
 
 class ExplanationBase(ExplanationMixin):
@@ -22,10 +22,14 @@ class ExplanationBase(ExplanationMixin):
     """
 
     def __init__(
-        self, sparse: bool = False, show_rating: bool = True, save: bool = True, config: Dict = None, 
+        self,
+        sparse: bool = False,
+        show_rating: bool = True,
+        save: bool = True,
+        config: Dict = None,
     ) -> None:
         """
-        
+
 
         Args:
             sparse (bool, optional): DESCRIPTION. Defaults to False.
@@ -62,28 +66,31 @@ class ExplanationBase(ExplanationMixin):
             "the {} features which were most important for "
             "how the mechanism made its decision in your specific case:"
         )
-        
+
         self.score_text_empty = (
-            "The automated mechanism analyzed hundreds of applications and used {} attributes to produce a rating for each applicant between 1 and 10."
+            "The automated mechanism analyzed hundreds of applications and used"
+            " {} attributes to produce a rating for each applicant between 1"
+            " and 10."
+        )
+
+        self.score_text_extension = "Your rating was {:.1f}."
+
+        if self.show_rating:
+            self.score_text_empty = " ".join(
+                [self.score_text_empty, self.score_text_extension]
             )
-         
-        self.score_text_extension = (
-              "Your rating was {:.1f}."
-          )
-        
-        if self.show_rating:   
-            self.score_text_empty = ' '.join([self.score_text_empty, self.score_text_extension])
-                        
 
     def setup_paths(self):
         """
-        
+
 
         Returns:
             None.
 
         """
-        self.path = os.path.join(os.path.dirname(os.getcwd()), "reports", self.folder)
+        self.path = os.path.join(
+            os.path.dirname(os.getcwd()), "reports", self.folder
+        )
         self.path_plot = create_folder(os.path.join(self.path, "plot"))
         self.path_result = create_folder(os.path.join(self.path, "results"))
         self.path_log = create_folder(os.path.join(self.path, "logs"))
@@ -137,9 +144,11 @@ class ExplanationBase(ExplanationMixin):
         Returns:
             None
         """
-        return self.method_text_empty.format(self.num_to_str[len(feature_values)])
+        return self.method_text_empty.format(
+            self.num_to_str[len(feature_values)]
+        )
 
-    def get_sentences(self, feature_values: list, sentence:str) -> None:
+    def get_sentences(self, feature_values: list, sentence: str) -> None:
         """
         Generate the output sentences
 
@@ -170,10 +179,10 @@ class ExplanationBase(ExplanationMixin):
         return self.natural_language_text_empty.format(
             self.num_to_str[len(feature_values)], sentences
         )
-    
+
     def get_score_text(self, feature_values: list):
         """
-        
+
 
         Args:
             feature_values (list): DESCRIPTION.
@@ -182,18 +191,17 @@ class ExplanationBase(ExplanationMixin):
             TYPE: DESCRIPTION.
 
         """
-        number_of_features =  self.X.shape[1]        
-        return self.score_text_empty.format(
-           number_of_features, self.prediction
-        )
-        
+        number_of_features = self.X.shape[1]
+        return self.score_text_empty.format(number_of_features, self.prediction)
 
     def get_plot_name(self, sample=None):
 
         if sample:
             plot_name = f"{self.explanation_name}_sample_{sample}_sparse_{bool(self.sparse)}.png"
         else:
-            plot_name = f"{self.explanation_name}_sparse_{bool(self.sparse)}.png"
+            plot_name = (
+                f"{self.explanation_name}_sparse_{bool(self.sparse)}.png"
+            )
         return plot_name
 
     def save_csv(self, sample: int) -> None:
@@ -211,7 +219,9 @@ class ExplanationBase(ExplanationMixin):
         """
         assert hasattr(self, "method_text"), "instance lacks method_text"
         assert hasattr(self, "score_text"), "instance lacks score_text"
-        assert hasattr(self, "natural_language_text"), "instance lacks natural_language_text"
+        assert hasattr(
+            self, "natural_language_text"
+        ), "instance lacks natural_language_text"
         assert hasattr(self, "plot_name"), "instance lacks plot_name"
         assert hasattr(self, "prediction"), "instance lacks prediction"
 

@@ -15,7 +15,9 @@ class SurrogatePlot(object):
     This class create the graphviz based surrogate plot using the trained sklearn DecisionTree
     """
 
-    def get_plot(self, model, feature_names, precision, simplify=True, add_label=True):
+    def get_plot(
+        self, model, feature_names, precision, simplify=True, add_label=True
+    ):
         """
         Update the dot file as desired, simplify the text in the boxes
 
@@ -41,7 +43,7 @@ class SurrogatePlot(object):
         )
 
         if simplify:
-            
+
             f = self.remove_text(f)
             f = self.simplify_plot(f)
             if add_label:
@@ -49,8 +51,7 @@ class SurrogatePlot(object):
 
         f = self.one_hot_encoding_text(f)
         return f
-    
-    
+
     @staticmethod
     def one_hot_encoding_text(f):
         """
@@ -61,32 +62,32 @@ class SurrogatePlot(object):
 
         Returns:
             f (TYPE): DESCRIPTION.
-        """                   
-        values = re.findall(r'\[label="(.*?)"\]', f, re.DOTALL)       
+        """
+        values = re.findall(r'\[label="(.*?)"\]', f, re.DOTALL)
         for value in values:
-                    
-            if ' - ' in value:
-                text = value.split('<=')[0].strip()
-                
-                feature_name = text.split(' - ')[0]
-                feature_value = text.split(' - ')[1]
-                new_text = f'{feature_name} is not {feature_value}'
-                f = f.replace(value, new_text)                
-        
+
+            if " - " in value:
+                text = value.split("<=")[0].strip()
+
+                feature_name = text.split(" - ")[0]
+                feature_value = text.split(" - ")[1]
+                new_text = f"{feature_name} is not {feature_value}"
+                f = f.replace(value, new_text)
+
         return f
-    
-    
+
     @staticmethod
     def simplify_plot(f):
-       
+
         # remove "value = xy" for all cells, except the lowest ones
         values = re.findall(r"value = (\d{0,5}\.\d{0,5})", f)
         print(values)
         for idx, value in enumerate(values):
             print(idx, value, len(values))
-            if ((len(values) > 3 and idx in [0, 1, 4]) or 
-                (len(values) == 7 and idx in [0]) or 
-                (len(values) == 15 and idx in [0, 1, 2, 4, 5, 9, 12])
+            if (
+                (len(values) > 3 and idx in [0, 1, 4])
+                or (len(values) == 7 and idx in [0])
+                or (len(values) == 15 and idx in [0, 1, 2, 4, 5, 9, 12])
             ):
                 if len(values) == 15:
                     pass
@@ -96,19 +97,16 @@ class SurrogatePlot(object):
         f = re.sub(r"value =", "Average rating:\n", f)
         print(f)
         return f
-    
-       
-    
+
     @staticmethod
     def remove_text(f):
-         # change the string via regex
+        # change the string via regex
         f = re.sub(r"(\\nsamples = \d{0,5})", "", f)
         f = re.sub(r"(samples = \d{0,5})", "", f)
         f = re.sub(r"(\\n\\n)", "\\n", f)
         f = re.sub(r"(\\nvalue)", "value", f)
         f = re.sub(r"<=", "<", f)
         return f
-    
 
     @staticmethod
     def add_labels(f):
@@ -122,21 +120,18 @@ class SurrogatePlot(object):
             f (TYPE): DESCRIPTION.
 
         """
-        
-        
+
         def get_label_based_on_nodes(idx):
-            
+
             true_list = []
             label = idx in true_list
             return label
-        
-        
+
         matches = re.findall(r"\d -> \d ;", f)
         for idx, match in enumerate(matches):
             # check if even or not, give label based on this
             label = bool(idx % 2 == 0)
-            
-            
+
             first_number = re.match(r"(\d) -> \d ;", match).groups()[0]
             second_number = re.match(r"\d -> (\d) ;", match).groups()[0]
 

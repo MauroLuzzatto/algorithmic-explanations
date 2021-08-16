@@ -29,7 +29,9 @@ def replace_line_break(string):
     return string.replace("\r\n", " | ") if isinstance(string, str) else ""
 
 
-df = pd.read_csv(os.path.join(path, file), sep=";", encoding="utf-8", index_col=0)
+df = pd.read_csv(
+    os.path.join(path, file), sep=";", encoding="utf-8", index_col=0
+)
 df["GPA"] = df["GPA"].str.replace(",", ".").astype(float)
 
 

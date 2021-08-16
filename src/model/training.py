@@ -11,7 +11,8 @@ import sys
 from xgboost import XGBRegressor  # type: ignore
 
 sys.path.insert(
-    0, r"C:\Users\maurol\OneDrive\Dokumente\Python_Scripts\algorithmic-explanations"
+    0,
+    r"C:\Users\maurol\OneDrive\Dokumente\Python_Scripts\algorithmic-explanations",
 )
 
 from src.model.config import path_base

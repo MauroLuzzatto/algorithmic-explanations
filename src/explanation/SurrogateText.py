@@ -7,13 +7,15 @@ Created on Sat Dec 19 11:41:28 2020
 
 import numpy as np
 
-from explanation.ExplanationMixin import ExplanationMixin
+from src.explanation.ExplanationMixin import ExplanationMixin
 
 
 class SurrogateText(ExplanationMixin):
     """"""
 
-    def __init__(self, text: str, model: object, X: np.array, feature_names: list):
+    def __init__(
+        self, text: str, model: object, X: np.array, feature_names: list
+    ):
         """
 
 
@@ -37,7 +39,9 @@ class SurrogateText(ExplanationMixin):
         self.children_right = self.model.tree_.children_right
         self.feature = self.model.tree_.feature
         self.threshold = self.model.tree_.threshold
-        self.values = self.model.tree_.value.reshape(self.model.tree_.value.shape[0], 1)
+        self.values = self.model.tree_.value.reshape(
+            self.model.tree_.value.shape[0], 1
+        )
 
     def get_text(self):
         """
@@ -125,28 +129,35 @@ class SurrogateText(ExplanationMixin):
         for index, node in enumerate(path):
             # check if we are not in the leaf
             if index != len(path) - 1:
-                
+
                 feature_name_per_node = self.feature_names[self.feature[node]]
-                
-                one_hot_feature_bool =  ' - ' in feature_name_per_node
+
+                one_hot_feature_bool = " - " in feature_name_per_node
                 if one_hot_feature_bool:
-                    feature_name, feature_value = feature_name_per_node.split(' - ')
-                
+                    feature_name, feature_value = feature_name_per_node.split(
+                        " - "
+                    )
+
                 # if under the threshold
                 if self.children_left[node] == path[index + 1]:
-                    
+
                     if one_hot_feature_bool:
                         text = f"{feature_name}' was not '{feature_value}'"
                     else:
-                        text = f"'{feature_name_per_node}' was less than {self.threshold[node]:.2f}"
+                        text = (
+                            f"'{feature_name_per_node}' was less than"
+                            f" {self.threshold[node]:.2f}"
+                        )
                 else:
-                    
+
                     if one_hot_feature_bool:
                         text = f"'{feature_name}' was '{feature_value}'"
                     else:
-                        text = f"'{feature_name_per_node}' was greater than {self.threshold[node]:.2f}"
+                        text = (
+                            f"'{feature_name_per_node}' was greater than"
+                            f" {self.threshold[node]:.2f}"
+                        )
                 mask.append(text)
-                
+
         sentences = [text for text in mask if text]
         return sentences
-    

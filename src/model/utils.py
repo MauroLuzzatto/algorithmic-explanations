@@ -151,22 +151,21 @@ def stack_dataset_for_multiple_ratings(field, X, y):
     """
     Stack the rating from multiple players
     """
-    
+
     print(list(y))
-    
+
     num_players = y.shape[1]
-    
+
     y = y.stack().reset_index()
     new_name = f"{field}.player.rating"
     y.rename(columns={0: new_name}, inplace=True)
     y.set_index("Entry ID", inplace=True)
     y = y[new_name]
     y.sort_index(inplace=True)
-    
-    
+
     X_list = [X for _ in range(num_players)]
     X = pd.concat(X_list, axis=0)
-        
+
     X.sort_index(inplace=True)
     return X, y
 
@@ -192,7 +191,7 @@ def setup_dataset(field, X, y):
         for player_number in list(range(1, 4)):
             player_cols = [col for col in columns if str(player_number) in col]
             print(player_cols)
-            
+
             new_name = f"full.player.rating.{player_number}"
             y = average_the_ratings(y, player_cols, new_name)
 
@@ -212,7 +211,7 @@ def average_the_ratings(y, columns, new_name):
     return y
 
 
-def shuffle_in_unison(a,b, seed=0):
+def shuffle_in_unison(a, b, seed=0):
     """
     shuffle two pandas dataframe in parallel
 
@@ -226,78 +225,140 @@ def shuffle_in_unison(a,b, seed=0):
 
     """
 
-    assert len(a)==len(b)
+    assert len(a) == len(b)
     c = np.arange(len(a))
-    
-    
-    np.random.seed(seed)    
+
+    np.random.seed(seed)
     np.random.shuffle(c)
-    
+
     return a.iloc[c], b.iloc[c]
 
 
 def create_treatment_dataframe(samples_dict):
-    
+
     number = 1
     treatment_groups = []
     for key in samples_dict.keys():
         for samples, sparse, show_score in samples_dict[key]:
-            
+
             for sample in samples:
                 treatment_groups.append(
-                  
-                        {'Entry ID': sample,
-                         'explanation_type': key,
-                         'sparse': sparse,
-                         'show_score': show_score,
-                         'treat': number
-                         }
-                    )
-            number+=1
-                
+                    {
+                        "Entry ID": sample,
+                        "explanation_type": key,
+                        "sparse": sparse,
+                        "show_score": show_score,
+                        "treat": number,
+                    }
+                )
+            number += 1
+
     return pd.DataFrame(treatment_groups)
 
 
 def experiment_setup(X):
-    
-    
-    
+
     samples = X.index.tolist()
     samples_per_split = 24
-        
+
     samples_dict = {
         "permutation": [
             # list of samples, sparse, show_score
-            (samples[0*samples_per_split:1*samples_per_split], True, True),
-            (samples[1*samples_per_split:2*samples_per_split], True, False), 
-            (samples[2*samples_per_split:3*samples_per_split], False, True),
-            (samples[3*samples_per_split:4*samples_per_split], False, False)
+            (
+                samples[0 * samples_per_split : 1 * samples_per_split],
+                True,
+                True,
+            ),
+            (
+                samples[1 * samples_per_split : 2 * samples_per_split],
+                True,
+                False,
+            ),
+            (
+                samples[2 * samples_per_split : 3 * samples_per_split],
+                False,
+                True,
+            ),
+            (
+                samples[3 * samples_per_split : 4 * samples_per_split],
+                False,
+                False,
+            ),
         ],
         "shapley": [
-            (samples[4*samples_per_split:5*samples_per_split], True, True), 
-            (samples[5*samples_per_split:6*samples_per_split], True, False), 
-            (samples[6*samples_per_split:7*samples_per_split], False, True),
-            (samples[7*samples_per_split:8*samples_per_split], False, False)
-            
+            (
+                samples[4 * samples_per_split : 5 * samples_per_split],
+                True,
+                True,
+            ),
+            (
+                samples[5 * samples_per_split : 6 * samples_per_split],
+                True,
+                False,
+            ),
+            (
+                samples[6 * samples_per_split : 7 * samples_per_split],
+                False,
+                True,
+            ),
+            (
+                samples[7 * samples_per_split : 8 * samples_per_split],
+                False,
+                False,
+            ),
         ],
         "surrogate": [
-            (samples[8*samples_per_split:9*samples_per_split], True, True), 
-            (samples[9*samples_per_split:10*samples_per_split], True, False), 
-            (samples[10*samples_per_split:11*samples_per_split], False, True),
-            (samples[11*samples_per_split:12*samples_per_split], False, False)
-            
+            (
+                samples[8 * samples_per_split : 9 * samples_per_split],
+                True,
+                True,
+            ),
+            (
+                samples[9 * samples_per_split : 10 * samples_per_split],
+                True,
+                False,
+            ),
+            (
+                samples[10 * samples_per_split : 11 * samples_per_split],
+                False,
+                True,
+            ),
+            (
+                samples[11 * samples_per_split : 12 * samples_per_split],
+                False,
+                False,
+            ),
         ],
         "counterfactual": [
-            (samples[12*samples_per_split:13*samples_per_split], True, True), 
-            (samples[13*samples_per_split:14*samples_per_split], True, False), 
-            (samples[14*samples_per_split:15*samples_per_split], False, True),
-            (samples[15*samples_per_split:16*samples_per_split], False, False)
+            (
+                samples[12 * samples_per_split : 13 * samples_per_split],
+                True,
+                True,
+            ),
+            (
+                samples[13 * samples_per_split : 14 * samples_per_split],
+                True,
+                False,
+            ),
+            (
+                samples[14 * samples_per_split : 15 * samples_per_split],
+                False,
+                True,
+            ),
+            (
+                samples[15 * samples_per_split : 16 * samples_per_split],
+                False,
+                False,
+            ),
         ],
-        "control_group":[
-            (samples[16*samples_per_split:16*samples_per_split+19], None, True), 
-            (samples[16*samples_per_split+19:], None, False), 
-
-        ]
+        "control_group": [
+            (
+                samples[16 * samples_per_split : 16 * samples_per_split + 19],
+                None,
+                True,
+            ),
+            (samples[16 * samples_per_split + 19 :], None, False),
+        ],
     }
-       
+
     return samples_dict

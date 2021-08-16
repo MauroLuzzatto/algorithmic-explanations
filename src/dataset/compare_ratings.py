@@ -17,7 +17,6 @@ import pandas as pd
 from src.model.config import path_base
 
 
-
 meta_columns = [
     "participant.id_in_session",
     "participant.code",
@@ -83,32 +82,26 @@ def fix_column_name(columns):
     return columns_new
 
 
-
-path_base = r'C:\Users\maurol\OneDrive\Dokumente\Python_Scripts\algorithmic-explanations'
+path_base = r"C:\Users\maurol\OneDrive\Dokumente\Python_Scripts\algorithmic-explanations"
 folder_name = "algorithmic_explanations"
 folder_name_v2 = "algorithmic_explanations_v2"
 
 path_ratings = os.path.join(path_base, "dataset", "ratings")
 
 
-file = 'essay_all_apps_wide-2021-05-22.csv'
+file = "essay_all_apps_wide-2021-05-22.csv"
 
 df = pd.read_csv(os.path.join(path_ratings, folder_name, file))
 
-file_v2 = 'essay_batch1_P2P3.csv'
+file_v2 = "essay_batch1_P2P3.csv"
 
 df_v2 = pd.read_csv(os.path.join(path_ratings, folder_name_v2, file_v2))
 
 
 df_list = []
 
-files = [
-    'essay_batch1_P2P3.csv',
-    'essay_batch2_P2P3.csv'
-    
-    ]
+files = ["essay_batch1_P2P3.csv", "essay_batch2_P2P3.csv"]
 folder_name = "algorithmic_explanations_v2"
-
 
 
 import matplotlib.pyplot as plt
@@ -118,9 +111,8 @@ dict_df = {}
 list_data = []
 
 for file in files:
-    
-    print(file)
 
+    print(file)
 
     df = pd.read_csv(os.path.join(path_ratings, folder_name, file))
     df.index = ["player1", "player2", "player3"]
@@ -150,16 +142,15 @@ for file in files:
             .dropna(subset=["player.rating"])
         )
 
-        fig = plt.figure(figsize=(4,4))
-        plt.title(f'{player} - {file}')
-        plt.hist(dict_df[player]['player.rating'])
+        fig = plt.figure(figsize=(4, 4))
+        plt.title(f"{player} - {file}")
+        plt.hist(dict_df[player]["player.rating"])
         plt.show()
 
         # dict_df[player].to_csv(
         #     os.path.join(path_save, f"{player}_{file}.csv"), sep=",", encoding="utf-8"
         # )
-        
-    
+
     df_new = pd.DataFrame(list_data).sort_values("player.applicant_id")
     df_new.dropna(subset=["player.rating"], inplace=True)
 
@@ -180,13 +171,14 @@ for file in files:
 
     df_rating.columns = columns
     df_rating = df_rating.rename(
-        columns={"player.applicant_name": "name", "player.applicant_id": "Entry ID"}
+        columns={
+            "player.applicant_name": "name",
+            "player.applicant_id": "Entry ID",
+        }
     )
-
 
     # df_rating.to_csv(
     #     os.path.join(path_save, f"ratings_{file}.csv"), sep=",", encoding="utf-8"
     # )
 
     df_list.append(df_rating)
-

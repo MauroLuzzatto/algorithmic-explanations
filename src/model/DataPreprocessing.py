@@ -51,7 +51,9 @@ class DataPreprocessing(object):
 
         self.df = pd.concat(df_list, axis=0)
 
-        self.df.set_index("Entry ID", inplace=True, verify_integrity=True, drop=True)
+        self.df.set_index(
+            "Entry ID", inplace=True, verify_integrity=True, drop=True
+        )
         print(self.df.shape)
         return self.df
 
@@ -69,7 +71,9 @@ class DataPreprocessing(object):
             sep=";",
             encoding="utf-8",
         )
-        self.df.set_index(column, inplace=True, verify_integrity=True, drop=True)
+        self.df.set_index(
+            column, inplace=True, verify_integrity=True, drop=True
+        )
         print(self.df.shape)
         self.data_cleaning()
         self.df.index.rename(index_name, inplace=True)
@@ -88,7 +92,9 @@ class DataPreprocessing(object):
         self.df["birth.date"] = self.df["birth.date"].apply(make_date)
         self.df["age"] = self.df["birth.date"].apply(get_age).astype(int)
 
-        self.df["fav.subjects"] = self.df["fav.subjects"].apply(replace_line_break)
+        self.df["fav.subjects"] = self.df["fav.subjects"].apply(
+            replace_line_break
+        )
         self.df["extracurriculars"] = self.df["extracurriculars"].apply(
             replace_line_break
         )
@@ -110,7 +116,9 @@ class DataPreprocessing(object):
         for feature in one_hot_encoding:
 
             self.df[feature].fillna("", inplace=True)
-            self.df[feature] = self.df[feature].apply(lambda text: text.split(" | "))
+            self.df[feature] = self.df[feature].apply(
+                lambda text: text.split(" | ")
+            )
 
             mlb = MultiLabelBinarizer()
 
@@ -137,7 +145,9 @@ class DataPreprocessing(object):
             self.df[feature] = self.df[feature].apply(
                 lambda text: text.replace("Other", f"Other - {feature}")
             )
-            self.df[feature] = self.df[feature].apply(lambda text: text.split(" | "))
+            self.df[feature] = self.df[feature].apply(
+                lambda text: text.split(" | ")
+            )
             self.df[feature] = self.df[feature].apply(
                 lambda values: len(values) if values[0] != "" else 0
             )
@@ -220,7 +230,9 @@ class DataPreprocessing(object):
         if not name:
             name = file_name.split(".")[0] + "_processed.csv"
 
-        df.to_csv(os.path.join(self.path_save, name), sep=";", encoding="utf-8-sig")
+        df.to_csv(
+            os.path.join(self.path_save, name), sep=";", encoding="utf-8-sig"
+        )
         print(df.shape)
         print(os.path.join(self.path_save, name))
 
@@ -236,11 +248,11 @@ class DataPreprocessing(object):
 
         """
         for feature in fill_na:
-            
+
             plt.title(feature)
-            self.df[feature].hist(figsize=(4,4))
+            self.df[feature].hist(figsize=(4, 4))
             plt.show()
-            
+
             if approach == "min":
                 value = self.df[feature].min()
             elif isinstance(approach, float):
@@ -248,7 +260,7 @@ class DataPreprocessing(object):
 
             else:
                 value = self.df[feature].median()
-                
+
             print(feature, value)
             self.df[feature].fillna(value, inplace=True)
 
@@ -316,8 +328,7 @@ if __name__ == "__main__":
         ("age", "Age"),
     ]
 
-    categorical_encoding = [
-    ]
+    categorical_encoding = []
     one_hot_encoding = [
         "Major",
         "Grade",
@@ -339,7 +350,7 @@ if __name__ == "__main__":
         "Ethnicity",
         "Gender",
         "State of residence",
-        "Age"
+        "Age",
     ]
 
     fill_na = [
@@ -352,7 +363,9 @@ if __name__ == "__main__":
     essay_column = "essay"
     index_name = "Entry ID"
 
-    path_rating = os.path.join(path_base, r"dataset", "ratings", "post_processed_v2")
+    path_rating = os.path.join(
+        path_base, r"dataset", "ratings", "post_processed_v2"
+    )
     path_save = os.path.join(path_base, r"dataset", "training")
     path_data = path_save
 
@@ -382,8 +395,7 @@ if __name__ == "__main__":
         encoding="utf-8-sig",
         index_col=0,
     )
-    
-    
+
     df_final = df_processed.merge(
         df_ratings, how="outer", left_index=True, right_index=True
     )
@@ -391,15 +403,11 @@ if __name__ == "__main__":
     df_final["Essay grade"] = df_final[
         [col for col in list(df_final) if "essay.player.rating" in col]
     ].mean(axis=1)
-    
-    
+
     # for _, row in df_final.iterrows():
     #     print(row[['FirstName', 'LastName', 'Email', 'name']].values)
-        
-        
-    df_final.dropna(subset=['FirstName'], inplace=True)
-    df_final = df_final.drop(['name', 'Token'], axis=1)
-    
-    dataset.save_csv(df_final, name=save_name)
 
-    
+    df_final.dropna(subset=["FirstName"], inplace=True)
+    df_final = df_final.drop(["name", "Token"], axis=1)
+
+    dataset.save_csv(df_final, name=save_name)

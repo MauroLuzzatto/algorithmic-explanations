@@ -6,7 +6,7 @@ Created on Thu May 13 21:49:43 2021
 """
 import os
 
-from explanation.CategoryMapper import CategoryMapper
+from src.explanation.CategoryMapper import CategoryMapper
 
 
 class ExplanationMixin:
@@ -57,14 +57,29 @@ class ExplanationMixin:
         """
         map number of features to string values
         """
+
+        number_text = (
+            "one",
+            "two",
+            "three",
+            "four",
+            "five",
+            "six",
+            "seven",
+            "eight",
+            "nine",
+            "ten",
+            "eleven",
+            "twelve",
+            "thirteen",
+            "fourteen",
+            "fifteen",
+            "sixteen",
+            "seventeen",
+            "eighteen",
+            "nineteen",
+            "twenty",
+        )
         self.num_to_str = {}
-        self.num_to_str[1] = "one"
-        self.num_to_str[2] = "two"
-        self.num_to_str[3] = "three"
-        self.num_to_str[4] = "four"
-        self.num_to_str[5] = "five"
-        self.num_to_str[6] = "six"
-        self.num_to_str[7] = "seven"
-        self.num_to_str[8] = "eight"
-        self.num_to_str[9] = "nine"
-        self.num_to_str[10] = "ten"
+        for text, number in zip(number_text, range(1, 21)):
+            self.num_to_str[number] = text

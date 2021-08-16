@@ -19,7 +19,7 @@ import pandas as pd
 import sklearn
 from sklearn.inspection import permutation_importance
 
-from explanation.ExplanationBase import ExplanationBase
+from src.explanation.ExplanationBase import ExplanationBase
 
 
 class PermutationExplanation(ExplanationBase):
@@ -37,7 +37,9 @@ class PermutationExplanation(ExplanationBase):
         config: Dict = None,
         save: bool = True,
     ):
-        super(PermutationExplanation, self).__init__(sparse, show_rating, save, config)
+        super(PermutationExplanation, self).__init__(
+            sparse, show_rating, save, config
+        )
         """
         Init the specific explanation class, the base class is "Explanation"
 
@@ -59,15 +61,19 @@ class PermutationExplanation(ExplanationBase):
 
         self.feature_names = list(X)
         self.num_features = self.sparse_to_num_features()
-        
+
         self.natural_language_text_empty = (
-           "The {} attributes which were most important for the automated mechanism's assignment of ratings and their average contributions were: {}."
+            "The {} attributes which were most important for the automated"
+            " mechanism's assignment of ratings and their average contributions"
+            " were: {}."
         )
 
         self.method_text_empty = (
-            "Here are the {} attributes which were most important for the automated mechanism’s assignment of ratings. Contribution is on a scale from 0 to 1."
+            "Here are the {} attributes which were most important for the"
+            " automated mechanism’s assignment of ratings. Contribution is on a"
+            " scale from 0 to 1."
         )
-        
+
         self.sentence_text = "'{}' ({:.2f})"
 
         self.explanation_name = "permutation"
@@ -110,7 +116,9 @@ class PermutationExplanation(ExplanationBase):
         """
         feature_values = []
         # sort by importance -> highst to lowest
-        for index in self.r.importances_mean.argsort()[::-1][: self.num_features]:
+        for index in self.r.importances_mean.argsort()[::-1][
+            : self.num_features
+        ]:
             feature_values.append(
                 (self.feature_names[index], self.r.importances_mean[index])
             )
@@ -128,7 +136,9 @@ class PermutationExplanation(ExplanationBase):
         values = self.r.importances[sorted_idx].T
         labels = [self.feature_names[i] for i in sorted_idx]
 
-        fig, ax = plt.subplots(figsize=(6, max(2, int(0.5 * self.num_features))))
+        fig, ax = plt.subplots(
+            figsize=(6, max(2, int(0.5 * self.num_features)))
+        )
         ax.boxplot(
             values[:, -self.num_features :],
             vert=False,
@@ -147,7 +157,9 @@ class PermutationExplanation(ExplanationBase):
         """
         sorted_idx = self.r.importances_mean.argsort()
         values = self.r.importances[sorted_idx].T
-        labels = [self.feature_names[i] for i in sorted_idx][-self.num_features :]
+        labels = [self.feature_names[i] for i in sorted_idx][
+            -self.num_features :
+        ]
 
         width = np.median(values[:, -self.num_features :], axis=0)
         y = np.arange(self.num_features)
@@ -161,7 +173,8 @@ class PermutationExplanation(ExplanationBase):
 
         if self.save:
             fig.savefig(
-                os.path.join(self.path_plot, self.plot_name), bbox_inches="tight"
+                os.path.join(self.path_plot, self.plot_name),
+                bbox_inches="tight",
             )
 
     def setup(self):
@@ -175,11 +188,13 @@ class PermutationExplanation(ExplanationBase):
         """
         self.calculate_explanation()
         self.feature_values = self.get_feature_values()
-        self.natural_language_text = self.get_natural_language_text(self.feature_values, self.sentence_text)
+        self.natural_language_text = self.get_natural_language_text(
+            self.feature_values, self.sentence_text
+        )
         self.method_text = self.get_method_text(self.feature_values)
         self.plot()
 
-    def main(self, sample_index, sample):
+    def main(self, sample_index, sample=None):
         """
         main function to create the explanation of the given sample. The
         method_text, natural_language_text and the plots are create per sample.
@@ -194,35 +209,5 @@ class PermutationExplanation(ExplanationBase):
         self.get_prediction(sample_index)
         self.score_text = self.get_score_text(self.num_features)
         self.save_csv(sample)
-        
+
         return self.score_text, self.method_text, self.natural_language_text
-
-
-if __name__ == "__main__":
-
-    from sklearn.datasets import load_diabetes
-    from sklearn.ensemble import RandomForestRegressor
-    from sklearn.model_selection import train_test_split
-
-    diabetes = load_diabetes()
-
-    X_train, X_val, y_train, y_val = train_test_split(
-        diabetes.data, diabetes.target, random_state=0
-    )
-
-    model = RandomForestRegressor(random_state=0).fit(X_train, y_train)
-    # model = sklearn.linear_model.LinearRegression().fit(X_train, y_train)
-    print(model.score(X_val, y_val))
-
-    # DF, based on which importance is checked
-    X_val = pd.DataFrame(X_val, columns=diabetes.feature_names)
-
-    sparse = False
-    text = "{}"
-    X = X_val
-    y = y_val
-    sample = 10
-
-    for sparse in [1]:
-        permutation = PermutationExplanation(X, y, model, sparse)
-        permutation.main(sample)
