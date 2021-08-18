@@ -22,6 +22,7 @@ from sklearn.inspection import permutation_importance
 from src.explanation.ExplanationBase import ExplanationBase
 
 
+
 class PermutationExplanation(ExplanationBase):
     """
     Non-contrastive, global Explanation
@@ -32,13 +33,12 @@ class PermutationExplanation(ExplanationBase):
         X: pd.DataFrame,
         y: np.array,
         model: sklearn.base.BaseEstimator,
-        sparse: bool,
-        show_rating: bool = True,
+        number_of_features: int,
         config: Dict = None,
         save: bool = True,
     ):
         super(PermutationExplanation, self).__init__(
-            sparse, show_rating, save, config
+            number_of_features, save, config
         )
         """
         Init the specific explanation class, the base class is "Explanation"
@@ -58,28 +58,25 @@ class PermutationExplanation(ExplanationBase):
         self.X = X
         self.y = y
         self.model = model
+        self.config = config
 
         self.feature_names = list(X)
-        self.num_features = self.sparse_to_num_features()
+        self.number_of_features = number_of_features
 
         self.natural_language_text_empty = (
-            "The {} attributes which were most important for the automated"
-            " mechanism's assignment of ratings and their average contributions"
-            " were: {}."
+            "The {} features which were most important for the model predictions were: {}."
         )
 
         self.method_text_empty = (
-            "Here are the {} attributes which were most important for the"
-            " automated mechanism’s assignment of ratings. Contribution is on a"
-            " scale from 0 to 1."
+            "Here are the model attributes which were most important for the {} prediction"
         )
 
-        self.sentence_text = "'{}' ({:.2f})"
+        # self.sentence_text_empty = "\n- '{}' ({:.2f})"
+        self.sentence_text_empty = "'{}' ({:.2f})"
 
         self.explanation_name = "permutation"
         self.logger = self.setup_logger(self.explanation_name)
         self.plot_name = self.get_plot_name()
-
         self.setup()
 
     def calculate_explanation(self, n_repeats=30):
@@ -117,7 +114,7 @@ class PermutationExplanation(ExplanationBase):
         feature_values = []
         # sort by importance -> highst to lowest
         for index in self.r.importances_mean.argsort()[::-1][
-            : self.num_features
+            : self.number_of_features
         ]:
             feature_values.append(
                 (self.feature_names[index], self.r.importances_mean[index])
@@ -137,12 +134,12 @@ class PermutationExplanation(ExplanationBase):
         labels = [self.feature_names[i] for i in sorted_idx]
 
         fig, ax = plt.subplots(
-            figsize=(6, max(2, int(0.5 * self.num_features)))
+            figsize=(6, max(2, int(0.5 * self.number_of_features)))
         )
         ax.boxplot(
-            values[:, -self.num_features :],
+            values[:, -self.number_of_features :],
             vert=False,
-            labels=labels[-self.num_features :],
+            labels=labels[-self.number_of_features :],
         )
         plt.tight_layout()
         plt.show(block=False)
@@ -158,13 +155,13 @@ class PermutationExplanation(ExplanationBase):
         sorted_idx = self.r.importances_mean.argsort()
         values = self.r.importances[sorted_idx].T
         labels = [self.feature_names[i] for i in sorted_idx][
-            -self.num_features :
+            -self.number_of_features :
         ]
 
-        width = np.median(values[:, -self.num_features :], axis=0)
-        y = np.arange(self.num_features)
+        width = np.median(values[:, -self.number_of_features :], axis=0)
+        y = np.arange(self.number_of_features)
 
-        fig = plt.figure(figsize=(6, max(2, int(0.5 * self.num_features))))
+        fig = plt.figure(figsize=(6, max(2, int(0.5 * self.number_of_features))))
         plt.barh(y=y, width=width, height=0.5)
         plt.yticks(y, labels)
         plt.xlabel("Contribution")
@@ -176,6 +173,28 @@ class PermutationExplanation(ExplanationBase):
                 os.path.join(self.path_plot, self.plot_name),
                 bbox_inches="tight",
             )
+            
+    def fit(self, X, y):
+        """
+        Since the plots and values are calculate once per trained model,
+        the feature importance computatoin is done at the beginning
+        when initating the class
+
+        Returns:
+            None.
+        """
+        
+        self.X = X
+        self.y = y
+        
+        self.calculate_explanation()
+        self.feature_values = self.get_feature_values()
+        sentences = self.get_sentences(self.feature_values, self.sentence_text_empty)
+        self.natural_language_text = self.get_natural_language_text(
+            sentences
+        )
+        self.method_text = self.get_method_text()
+        self.plot()
 
     def setup(self):
         """
@@ -188,13 +207,14 @@ class PermutationExplanation(ExplanationBase):
         """
         self.calculate_explanation()
         self.feature_values = self.get_feature_values()
+        sentences = self.get_sentences(self.feature_values, self.sentence_text_empty)
         self.natural_language_text = self.get_natural_language_text(
-            self.feature_values, self.sentence_text
+            sentences
         )
-        self.method_text = self.get_method_text(self.feature_values)
+        self.method_text = self.get_method_text()
         self.plot()
 
-    def main(self, sample_index, sample=None):
+    def explain(self, sample_index, sample_name=None):
         """
         main function to create the explanation of the given sample. The
         method_text, natural_language_text and the plots are create per sample.
@@ -205,9 +225,14 @@ class PermutationExplanation(ExplanationBase):
         Returns:
             None.
         """
+        
+        if not sample_name:
+            sample_name = sample_index
 
         self.get_prediction(sample_index)
-        self.score_text = self.get_score_text(self.num_features)
-        self.save_csv(sample)
+        self.score_text = self.get_score_text()
+        
+        if self.save:
+            self.save_csv(sample_name)
 
         return self.score_text, self.method_text, self.natural_language_text

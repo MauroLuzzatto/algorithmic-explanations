@@ -97,7 +97,7 @@ class Test:
             == "The eight attributes which were most important for the automated"
             " mechanism's assignment of ratings and their average"
             " contributions were: 'bmi' (0.15), 's5' (0.12), 'bp' (0.03),"
-            " and 'age' (0.02)."
+            " 'age' (0.02), 's2' (-0.00), 'sex' (-0.00), 's3' (-0.00), and 's1' (-0.01)."
         )
 
     def test_permuation_explanation_show_rating(self, setup):

@@ -266,22 +266,22 @@ def experiment_setup(X):
             # list of samples, sparse, show_score
             (
                 samples[0 * samples_per_split : 1 * samples_per_split],
-                True,
+                4,
                 True,
             ),
             (
                 samples[1 * samples_per_split : 2 * samples_per_split],
-                True,
+                6,
                 False,
             ),
             (
                 samples[2 * samples_per_split : 3 * samples_per_split],
-                False,
+                8,
                 True,
             ),
             (
                 samples[3 * samples_per_split : 4 * samples_per_split],
-                False,
+                10,
                 False,
             ),
         ],

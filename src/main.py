@@ -39,18 +39,7 @@ data = DataConfig(path_config)
 data_config = data.load_config()
 
 
-def print_output(sample, output):
 
-    score_text, method_text, explanation_text = output
-    separator = "---" * 20
-    print(sample)
-    print(separator)
-    print(score_text)
-    print(separator)
-    print(method_text)
-    print(separator)
-    print(explanation_text)
-    print("\n")
 
 
 def find_winner(X, y):
@@ -93,78 +82,62 @@ for field in ["all"]:
 
     new_name = f"{field}.player.rating"
     y = average_the_ratings(y, list(y), new_name)
-
-    df_winner = find_winner(X, y)
-    df_winner.to_csv(
-        os.path.join(path_save, "winner.csv"), sep=";", encoding="utf-8-sig"
-    )
-
-    print(X.loc[df_winner["Entry ID"]].tolist())
-
-    # remove winner
-    X.drop(df_winner["Entry ID"], inplace=True)
-    y.drop(df_winner["Entry ID"], inplace=True)
-
-    X, y = shuffle_in_unison(X, y)
-
     samples_dict = experiment_setup(X)
-    df_treatment = create_treatment_dataframe(samples_dict)
+   
 
-    df_treatment.to_csv(
-        os.path.join(path_save, "treatment_groups.csv"),
-        sep=";",
-        encoding="utf-8-sig",
-    )
-
-    # control group
-    for samples, sparse, show_rating in samples_dict["control_group"]:
-        control = ControlGroupExplanation(
-            X, y, model, sparse, show_rating, config
-        )
-        for sample in samples:
-            sample_index = map_index_to_sample(X, sample)
-            output = control.main(sample_index, sample)
-            print(sparse, show_rating)
-            print_output(sample, output)
+    # # control group
+    # for samples, sparse, show_rating in samples_dict["control_group"]:
+    #     control = ControlGroupExplanation(
+    #         X, y, model, sparse, show_rating, config
+    #     )
+    #     for sample in samples:
+    #         sample_index = map_index_to_sample(X, sample)
+    #         output = control.main(sample_index, sample)
+    #         print(sparse, show_rating)
+    #         print_output(sample, output)
 
     # Global, Non-contrastive
-    for samples, sparse, show_rating in samples_dict["permutation"]:
+    for samples, number_of_features, _ in samples_dict["permutation"]:
+        
         permutation = PermutationExplanation(
-            X, y, model, sparse, show_rating, config
+           X, y, model, number_of_features, config
         )
+        
+        permutation.fit(X, y)
+        
         for sample in samples:
             sample_index = map_index_to_sample(X, sample)
-            output = permutation.main(sample_index, sample)
-            print(sparse, show_rating)
-            print_output(sample, output)
+            output = permutation.explain(sample_index)
+            print(number_of_features)
+            print(permutation)
 
-    # Local, Non-contrastive
-    for samples, sparse, show_rating in samples_dict["shapley"]:
-        shapely = ShapleyExplanation(X, y, model, sparse, show_rating, config)
-        for sample in samples:
-            sample_index = map_index_to_sample(X, sample)
-            output = shapely.main(sample_index, sample)
-            print(sparse, show_rating)
-            print_output(sample, output)
+    # # Local, Non-contrastive
+    # for samples, sparse, show_rating in samples_dict["shapley"]:
+    #     shapely = ShapleyExplanation(X, y, model, sparse, show_rating, config)
+    #     for sample in samples:
+    #         sample_index = map_index_to_sample(X, sample)
+    #         output = shapely.main(sample_index, sample)
+    #         print(sparse, show_rating)
+    #         print_output(sample, output)
 
-    # Global, Contrastive
-    for samples, sparse, show_rating in samples_dict["surrogate"]:
-        surrogate = SurrogateModelExplanation(
-            X, y, model, sparse, show_rating, config
-        )
-        for sample in samples:
-            sample_index = map_index_to_sample(X, sample)
-            output = surrogate.main(sample_index, sample)
-            print(sparse, show_rating)
-            print_output(sample, output)
+    # # Global, Contrastive
+    # for samples, sparse, show_rating in samples_dict["surrogate"]:
+    #     surrogate = SurrogateModelExplanation(
+    #         X, y, model, sparse, show_rating, config
+    #     )
+    #     for sample in samples:
+    #         sample_index = map_index_to_sample(X, sample)
+    #         output = surrogate.main(sample_index, sample)
+    #         print(sparse, show_rating)
+    #         print_output(sample, output)
 
-    # Local, Contrastive
-    for samples, sparse, show_rating in samples_dict["counterfactual"]:
-        counterfactual = CounterfactualExplanation(
-            X, y, model, sparse, show_rating, config, y_desired=8.0
-        )
-        for sample in samples:
-            sample_index = map_index_to_sample(X, sample)
-            output = counterfactual.main(sample_index, sample)
-            print(sparse, show_rating)
-            print_output(sample, output)
+    # # Local, Contrastive
+    # for samples, sparse, show_rating in samples_dict["counterfactual"]:
+    #     counterfactual = CounterfactualExplanation(
+    #         X, y, model, sparse, show_rating, config, y_desired=8.0
+    #     )
+    #     for sample in samples:
+    #         sample_index = map_index_to_sample(X, sample)
+    #         output = counterfactual.main(sample_index, sample)
+    #         print(sparse, show_rating)
+    #         print_output(sample, output)

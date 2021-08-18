@@ -20,11 +20,9 @@ class ExplanationBase(ExplanationMixin):
     """
     Explanation base class
     """
-
     def __init__(
         self,
-        sparse: bool = False,
-        show_rating: bool = True,
+        number_of_features: int = 4,
         save: bool = True,
         config: Dict = None,
     ) -> None:
@@ -32,53 +30,41 @@ class ExplanationBase(ExplanationMixin):
 
 
         Args:
-            sparse (bool, optional): DESCRIPTION. Defaults to False.
-            show_rating (bool, optional): DESCRIPTION. Defaults to True.
+            number_of_features (int, optional): DESCRIPTION. Defaults to False.
             save (bool, optional): DESCRIPTION. Defaults to True.
             config (Dict, optional): DESCRIPTION. Defaults to None.
              (TYPE): DESCRIPTION.
 
         Returns:
             None: DESCRIPTION.
-
         """
-
-        self.sparse = sparse
+        self.number_of_features = number_of_features
         self.save = save
-        self.show_rating = show_rating
+        self.config = config
 
-        if not config:
-            config = {}
+        if not self.config:
+            self.config = {}
 
-        self.folder = config.get("folder", "explanation")
-        self.file_name = config.get("file_name", "explanations.csv")
+        self.folder = self.config.get("folder", "explanation")
+        self.file_name = self.config.get("file_name", "explanations.csv")
 
         self.setup_paths()
         self.get_number_to_string_dict()
 
         self.natural_language_text_empty = (
             "In your case, the {} features which "
-            "contributed most to the mechanism`s "
-            "decision were {}."
+            "contributed most to model's output were {}."
         )
         self.method_text_empty = (
-            "To help you understand this decision, here are "
+            "To help you understand the model predictions, here are "
             "the {} features which were most important for "
-            "how the mechanism made its decision in your specific case:"
+            "the model predictions in your specific case:"
         )
 
         self.score_text_empty = (
-            "The automated mechanism analyzed hundreds of applications and used"
-            " {} attributes to produce a rating for each applicant between 1"
-            " and 10."
+            "The {} used {} features to produce the predictions. The prediction of this sample was {:.1f}."
         )
-
-        self.score_text_extension = "Your rating was {:.1f}."
-
-        if self.show_rating:
-            self.score_text_empty = " ".join(
-                [self.score_text_empty, self.score_text_extension]
-            )
+        
 
     def setup_paths(self):
         """
@@ -108,17 +94,17 @@ class ExplanationBase(ExplanationMixin):
     def get_feature_values(self):
         raise NotImplementedError("Subclasses should implement this!")
 
-    def sparse_to_num_features(
-        self, sparse_features: int = 4, dense_features: int = 8
-    ) -> int:
-        """
-        Convert sparse bool into the number of selected features
-        """
-        if self.sparse:
-            num_features = sparse_features
-        else:
-            num_features = dense_features
-        return num_features
+    # def sparse_to_number_of_features(
+    #     self, sparse_features: int = 4, dense_features: int = 8
+    # ) -> int:
+    #     """
+    #     Convert sparse bool into the number of selected features
+    #     """
+    #     if self.sparse:
+    #         number_of_features = sparse_features
+    #     else:
+    #         number_of_features = dense_features
+    #     return number_of_features
 
     def get_prediction(self, sample: int = 0) -> float:
         """
@@ -135,20 +121,18 @@ class ExplanationBase(ExplanationMixin):
         # x = self.X.values[sample, :].reshape(1, -1)
         self.prediction = self.model.predict(self.X.values)[sample]
 
-    def get_method_text(self, feature_values: list) -> None:
+    def get_method_text(self) -> None:
         """
         Generate the output of the method explanation.
 
-        Args:
-            feature_values -> list(tuple(name, value))
         Returns:
             None
         """
         return self.method_text_empty.format(
-            self.num_to_str[len(feature_values)]
+            self.num_to_str[self.number_of_features]
         )
 
-    def get_sentences(self, feature_values: list, sentence: str) -> None:
+    def get_sentences(self, feature_values: list, sentence_empty: str) -> None:
         """
         Generate the output sentences
 
@@ -160,13 +144,13 @@ class ExplanationBase(ExplanationMixin):
 
         values = []
         for feature_name, feature_value in feature_values:
-            value = sentence.format(feature_name, feature_value)
+            value = sentence_empty.format(feature_name, feature_value)
             values.append(value)
 
         sentences = self.join_text_with_comma_and_and(values)
         return sentences
 
-    def get_natural_language_text(self, feature_values, sentence_text):
+    def get_natural_language_text(self, sentences):
         """
         Generate the output of the explanation in natural language.
 
@@ -174,13 +158,11 @@ class ExplanationBase(ExplanationMixin):
             TYPE: DESCRIPTION.
 
         """
-
-        sentences = self.get_sentences(feature_values, sentence_text)
         return self.natural_language_text_empty.format(
-            self.num_to_str[len(feature_values)], sentences
+            self.num_to_str[self.number_of_features], sentences
         )
 
-    def get_score_text(self, feature_values: list):
+    def get_score_text(self):
         """
 
 
@@ -191,18 +173,38 @@ class ExplanationBase(ExplanationMixin):
             TYPE: DESCRIPTION.
 
         """
-        number_of_features = self.X.shape[1]
-        return self.score_text_empty.format(number_of_features, self.prediction)
+        number_of_dataset_features = self.X.shape[1]
+        return self.score_text_empty.format(
+            self.model.__class__.__name__, number_of_dataset_features, self.prediction
+        )
+    
+
+    def get_model_text(self):
+        
+        return str(self.model)
 
     def get_plot_name(self, sample=None):
 
         if sample:
-            plot_name = f"{self.explanation_name}_sample_{sample}_sparse_{bool(self.sparse)}.png"
+            plot_name = f"{self.explanation_name}_sample_{sample}_sparse_{self.number_of_features}.png"
         else:
             plot_name = (
-                f"{self.explanation_name}_sparse_{bool(self.sparse)}.png"
+                f"{self.explanation_name}_sparse_{self.number_of_features}.png"
             )
         return plot_name
+    
+    
+    def print_output(self,  separator="---" * 20):
+        
+        explanation = separator.join(
+            [self.score_text, self.method_text, self.natural_language_text]
+        )
+        return explanation
+    
+
+    def __str__(self, separator ='\n'):
+        return self.print_output(separator)
+        
 
     def save_csv(self, sample: int) -> None:
         """
@@ -230,7 +232,7 @@ class ExplanationBase(ExplanationMixin):
             "method": self.method_text,
             "explanation": self.natural_language_text,
             "plot": self.plot_name,
-            "sparse": self.sparse,
+            "number_of_features": self.number_of_features,
             "prediction": self.prediction,
         }
 
