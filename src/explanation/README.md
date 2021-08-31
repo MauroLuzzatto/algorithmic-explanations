@@ -1,6 +1,6 @@
 
 <img src="resources/logo.png" width="250" height="250" align="right" /></a>
-# explainy - model explanations for humans
+# explainy - black-box model explanations for humans
 
 explainy is a library for generating explanations for machine learning models in Python. It uses methods from **Machine Learning Explainability** and provides a standardized API to create feature importance explanations for samples. The explanations are generated in the form of plots and text.
 
@@ -18,6 +18,19 @@ contrastive	|			|
 non-contrastive	|			|
 sparse		|			|
 dense		|			|
+
+<!--
+
+algortihms for inspecting black-mox models
+
+The following machine learning frameworks are currently supported:
+* sklearn
+* xgboost
+
+--->
+
+
+
 
 
 <!--

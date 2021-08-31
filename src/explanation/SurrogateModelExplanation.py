@@ -8,7 +8,16 @@ from typing import Dict
 
 import graphviz
 import pandas as pd
-from sklearn.tree import DecisionTreeRegressor
+import numpy as np
+import warnings
+import subprocess
+
+
+from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
+from sklearn.base import is_classifier, is_regressor  # type: ignore
+
+from sklearn.linear_model import LogisticRegression, LinearRegression
+
 
 from src.explanation.ExplanationBase import ExplanationBase
 from src.explanation.SurrogatePlot import SurrogatePlot
@@ -25,13 +34,12 @@ class SurrogateModelExplanation(ExplanationBase):
         X,
         y,
         model,
-        sparse,
-        show_rating: bool = True,
+        number_of_features,
         config: Dict = None,
-        save=True,
+        kind = 'tree'
     ):
         super(SurrogateModelExplanation, self).__init__(
-            sparse, show_rating, save, config
+           config
         )
         """
         Init the specific explanation class, the base class is "Explanation"
@@ -51,7 +59,13 @@ class SurrogateModelExplanation(ExplanationBase):
         self.y = y
         self.feature_names = list(X)
         self.model = model
-        self.num_features = self.sparse_to_num_features()
+        self.number_of_features = np.log2(number_of_features)
+        self.number_of_groups = number_of_features
+        self.kind = kind
+        
+        kinds = ['tree', 'linear']
+        assert self.kind in kinds, f"'{self.kind}' is not a valid option, select from {kinds}"
+
 
         self.natural_language_text_empty = (
             "In the automated mechanism's assignment of ratings: {}"
@@ -66,61 +80,112 @@ class SurrogateModelExplanation(ExplanationBase):
 
         self.sentence = "Applicants received an average rating of {:.2f} if {}"
 
+
         self.explanation_name = "surrogate"
         self.logger = self.setup_logger(self.explanation_name)
-        self.plot_name = self.get_plot_name(str(self.show_rating))
 
-        self.precision = 2
-
-        if sparse:
-            self.num_features = 2
-        else:
-            self.num_features = 3
-
-        self.number_of_groups = 2 ** self.num_features
         self.setup()
 
-    def calculate_explanation(self, max_leaf_nodes=100):
+    def _calculate_importance(self, max_leaf_nodes=100):
         """
         Train a surrogate model (Decision Tree) on the predicted values
         from the original model
         """
+                
+        if self.kind == 'tree':
+        
+            if is_regressor(self.model) :
+                estimator = DecisionTreeRegressor
+            elif is_classifier(self.model):
+                estimator = DecisionTreeClassifier
+        
+            self.tree_surrgate(estimator, max_leaf_nodes=max_leaf_nodes)
+            
+        # elif self.kind == 'linear':
+        #     if is_regressor(self.model): 
+        #         estimator = LinearRegression
+        #     elif is_classifier(self.model):
+        #         estimator = LogisticRegression
+                
+        #     self.linear_surrogate(estimator)
+
+        else:
+            raise
+            
         y_hat = self.model.predict(self.X.values)
-        self.surrogate_model = DecisionTreeRegressor(
-            max_depth=self.num_features, max_leaf_nodes=max_leaf_nodes
-        )
+        
         self.surrogate_model.fit(self.X, y_hat)
         self.logger.info(
             "Surrogate Model R2 score: {:.2f}".format(
                 self.surrogate_model.score(self.X, y_hat)
             )
+        )            
+       
+        
+    def tree_surrgate(self, estimator, max_leaf_nodes, **kwargs):
+        
+        self.surrogate_model = estimator(
+            max_depth=self.number_of_features, 
+            max_leaf_nodes=max_leaf_nodes
         )
+                
+    def linear_surrogate(self, estimator, **kwargs):
+        
+        self.surrogate_model = estimator(
+            **kwargs
+        )
+        
+        
+        
+    def plot(self, index_sample=None, **kwargs):
+        
+        print(kwargs)
+        if self.kind == 'tree':
+            self.plot_tree(index_sample, **kwargs)
+        elif self.kind == 'linear':
+            self.plot_bar(index_sample, **kwargs)
+        
+            
+    def plot_bar(self, sample_index):
+        # TODO
+        pass
+            
 
-    def plot(self):
+    def plot_tree(self, sample_index=None, precision=2, **kwargs):
         """
         use garphix to plot the decision tree
         """
-        surrogatePlot = SurrogatePlot()
-        dot_file = surrogatePlot(
+        surrogatePlot = SurrogatePlot(
+            precision=precision,
+            **kwargs
+        )
+        
+        self.dot_file = surrogatePlot(
             model=self.surrogate_model,
             feature_names=self.feature_names,
-            precision=self.precision,
         )
 
         name, extension = os.path.splitext(self.plot_name)
+        
+        try:
+            graphviz.Source(
+                self.dot_file,
+                filename=os.path.join(self.path_plot, name),
+                format=extension.replace(".", ""),
+            ).view()
+        
+        except subprocess.CalledProcessError:
+            warnings.warn('plot already open!')
+            
+        
+    
+    def save(self, sample_name):
 
-        graphviz.Source(
-            dot_file,
-            filename=os.path.join(self.path_plot, name),
-            format=extension.replace(".", ""),
-        ).view()
+        with open(os.path.join(self.path_plot, "{}.dot".format(self.plot_name)), "w",) as file:
+            file.write(self.dot_file)
+            
+        self.save_csv(sample_name)
 
-        if self.save:
-            with open(
-                os.path.join(self.path_plot, "{}.dot".format(self.plot_name)),
-                "w",
-            ) as file:
-                file.write(dot_file)
 
     def get_method_text(self):
         """
@@ -158,12 +223,14 @@ class SurrogateModelExplanation(ExplanationBase):
         Returns:
             None.
         """
-        self.calculate_explanation()
+
+        self._calculate_importance()
         self.natural_language_text = self.get_natural_language_text()
         self.method_text = self.get_method_text()
-        self.plot()
+        self.plot_name = self.get_plot_name()
 
-    def main(self, sample_index, sample):
+
+    def explain(self, sample_index, sample_name=None, separator=None):
         """
         main function to create the explanation of the given sample. The
         method_text, natural_language_text and the plots are create per sample.
@@ -173,37 +240,11 @@ class SurrogateModelExplanation(ExplanationBase):
 
         Returns:
             None.
-        """
+        """       
+        if not sample_name:
+            sample_name = sample_index
+
         self.get_prediction(sample_index)
-        self.score_text = self.get_score_text(self.number_of_groups)
-        self.save_csv(sample)
-        return self.score_text, self.method_text, self.natural_language_text
-
-
-if __name__ == "__main__":
-
-    from sklearn.datasets import load_diabetes
-    from sklearn.ensemble import RandomForestRegressor
-    from sklearn.model_selection import train_test_split
-
-    diabetes = load_diabetes()
-
-    X_train, X_val, y_train, y_val = train_test_split(
-        diabetes.data, diabetes.target, random_state=0
-    )
-
-    model = RandomForestRegressor().fit(X_train, y_train)
-    # model = sklearn.linear_model.LinearRegression().fit(X_train, y_train)
-    print(model.score(X_val, y_val))
-
-    # DF, based on which importance is checked
-    X_val = pd.DataFrame(X_val, columns=diabetes.feature_names)
-
-    sparse = True
-    text = "{}"
-    X = X_val
-    y = y_val
-    sample = 10
-
-    surrogateExplanation = SurrogateModelExplanation(X, y, model, sparse)
-    surrogateExplanation.main(sample)
+        self.score_text = self.get_score_text()
+        self.explanation = self.get_explanation(separator)
+        return self.explanation

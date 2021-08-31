@@ -8,6 +8,7 @@ Created on Tue Nov 24 21:15:30 2020
 import csv
 import os
 from typing import Dict
+import warnings
 
 import pandas as pd
 
@@ -15,58 +16,52 @@ from src.explanation.ExplanationMixin import ExplanationMixin
 from src.explanation.Logger import Logger
 from src.explanation.utils import create_folder
 
+from abc import ABC, abstractmethod
 
-class ExplanationBase(ExplanationMixin):
+class ExplanationBase(ABC, ExplanationMixin):
     """
     Explanation base class
     """
     def __init__(
         self,
-        number_of_features: int = 4,
-        save: bool = True,
         config: Dict = None,
     ) -> None:
         """
 
-
         Args:
-            number_of_features (int, optional): DESCRIPTION. Defaults to False.
-            save (bool, optional): DESCRIPTION. Defaults to True.
             config (Dict, optional): DESCRIPTION. Defaults to None.
              (TYPE): DESCRIPTION.
 
         Returns:
             None: DESCRIPTION.
         """
-        self.number_of_features = number_of_features
-        self.save = save
-        self.config = config
 
-        if not self.config:
+        if not config:
             self.config = {}
+        else:
+            self.config = config
 
         self.folder = self.config.get("folder", "explanation")
         self.file_name = self.config.get("file_name", "explanations.csv")
 
-        self.setup_paths()
+        self.set_paths()
         self.get_number_to_string_dict()
-
-        self.natural_language_text_empty = (
-            "In your case, the {} features which "
-            "contributed most to model's output were {}."
-        )
-        self.method_text_empty = (
-            "To help you understand the model predictions, here are "
-            "the {} features which were most important for "
-            "the model predictions in your specific case:"
-        )
-
-        self.score_text_empty = (
+        
+        score_text_empty = (
             "The {} used {} features to produce the predictions. The prediction of this sample was {:.1f}."
         )
-        
+        self.score_text_empty = self.config.get("score_text_empty", score_text_empty)
 
-    def setup_paths(self):
+    
+    def get_number_of_features(self, number_of_features):
+        
+        if number_of_features > self.X.shape[1]:
+            warnings.warn(f'The "number_of_features" is larger than the number of dataset features. The value is set to {self.X.shape[1]}')
+        
+        return min(number_of_features, self.X.shape[1])
+
+
+    def set_paths(self):
         """
 
 
@@ -85,26 +80,13 @@ class ExplanationBase(ExplanationMixin):
         logger = Logger(logger_name, self.path_log)
         return logger.get_logger()
 
-    def calculate_explanation(self):
+    @abstractmethod
+    def _calculate_importance(self):
         raise NotImplementedError("Subclasses should implement this!")
 
+    @abstractmethod
     def plot(self):
         raise NotImplementedError("Subclasses should implement this!")
-
-    def get_feature_values(self):
-        raise NotImplementedError("Subclasses should implement this!")
-
-    # def sparse_to_number_of_features(
-    #     self, sparse_features: int = 4, dense_features: int = 8
-    # ) -> int:
-    #     """
-    #     Convert sparse bool into the number of selected features
-    #     """
-    #     if self.sparse:
-    #         number_of_features = sparse_features
-    #     else:
-    #         number_of_features = dense_features
-    #     return number_of_features
 
     def get_prediction(self, sample: int = 0) -> float:
         """
@@ -141,16 +123,16 @@ class ExplanationBase(ExplanationMixin):
         Returns:
             None
         """
-
         values = []
         for feature_name, feature_value in feature_values:
-            value = sentence_empty.format(feature_name, feature_value)
-            values.append(value)
+            values.append(
+                sentence_empty.format(feature_name, feature_value)    
+            )
 
         sentences = self.join_text_with_comma_and_and(values)
         return sentences
 
-    def get_natural_language_text(self, sentences):
+    def get_natural_language_text(self):
         """
         Generate the output of the explanation in natural language.
 
@@ -159,7 +141,7 @@ class ExplanationBase(ExplanationMixin):
 
         """
         return self.natural_language_text_empty.format(
-            self.num_to_str[self.number_of_features], sentences
+            self.num_to_str[self.number_of_features], self.sentences
         )
 
     def get_score_text(self):
@@ -180,7 +162,6 @@ class ExplanationBase(ExplanationMixin):
     
 
     def get_model_text(self):
-        
         return str(self.model)
 
     def get_plot_name(self, sample=None):
@@ -194,16 +175,47 @@ class ExplanationBase(ExplanationMixin):
         return plot_name
     
     
-    def print_output(self,  separator="---" * 20):
+    def get_explanation(self, separator="\n"):
         
-        explanation = separator.join(
-            [self.score_text, self.method_text, self.natural_language_text]
-        )
+        
+        assert hasattr(self, "method_text"), "instance lacks method_text"
+        assert hasattr(self, "score_text"), "instance lacks score_text"
+        assert hasattr(self, "natural_language_text"), "instance lacks natural_language_text"
+        
+        if separator:
+            explanation = separator.join(
+                [self.score_text, self.method_text, self.natural_language_text]
+            )
+        else:
+            explanation =(
+                self.score_text, self.method_text, self.natural_language_text
+            )
         return explanation
     
-
+    
+    def print_output(self, separator="\n"):
+        print(self.get_explanation(separator))
+    
     def __str__(self, separator ='\n'):
         return self.print_output(separator)
+    
+    def save(self, sample_name):
+        """
+
+
+        Args:
+            sample_name (TYPE): DESCRIPTION.
+
+        Returns:
+            None.
+
+        """
+        self.save_csv(sample_name)
+
+        self.fig.savefig(
+            os.path.join(self.path_plot, self.plot_name),
+            bbox_inches="tight",
+        )
         
 
     def save_csv(self, sample: int) -> None:
@@ -229,8 +241,8 @@ class ExplanationBase(ExplanationMixin):
 
         output = {
             "score_text": self.score_text,
-            "method": self.method_text,
-            "explanation": self.natural_language_text,
+            "method_text": self.method_text,
+            "natural_language_text": self.natural_language_text,
             "plot": self.plot_name,
             "number_of_features": self.number_of_features,
             "prediction": self.prediction,
@@ -238,7 +250,7 @@ class ExplanationBase(ExplanationMixin):
 
         df = pd.DataFrame(output, index=[sample])
 
-        for column in ["method", "explanation", "score_text"]:
+        for column in ["method_text", "natural_language_text", "score_text"]:
             df[column] = df[column].astype(str)
             df[column] = df[column].str.replace("\n", "\\n")
 

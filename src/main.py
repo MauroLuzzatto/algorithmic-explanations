@@ -10,7 +10,7 @@ import os
 from explanation import (
     CounterfactualExplanation,
     PermutationExplanation,
-    ShapleyExplanation,
+    ShapExplanation,
     SurrogateModelExplanation,
     ControlGroupExplanation,
 )
@@ -96,40 +96,51 @@ for field in ["all"]:
     #         print(sparse, show_rating)
     #         print_output(sample, output)
 
-    # Global, Non-contrastive
-    for samples, number_of_features, _ in samples_dict["permutation"]:
-        
-        permutation = PermutationExplanation(
-           X, y, model, number_of_features, config
-        )
-        
-        permutation.fit(X, y)
-        
-        for sample in samples:
-            sample_index = map_index_to_sample(X, sample)
-            output = permutation.explain(sample_index)
-            print(number_of_features)
-            print(permutation)
 
-    # # Local, Non-contrastive
-    # for samples, sparse, show_rating in samples_dict["shapley"]:
-    #     shapely = ShapleyExplanation(X, y, model, sparse, show_rating, config)
+    # config = {
+    #     'sentence_text_empty':"\n- '*****{}*****' ({:.2f})",
+    #     'score_text_empty': '{}--{}--{}'
+    # }
+
+    # # Global, Non-contrastive
+    # for samples, number_of_features, _ in samples_dict["permutation"]:
+        
+    #     explainer = PermutationExplanation(
+    #        X, y, model, number_of_features, config
+    #     )
+                
     #     for sample in samples:
     #         sample_index = map_index_to_sample(X, sample)
-    #         output = shapely.main(sample_index, sample)
-    #         print(sparse, show_rating)
-    #         print_output(sample, output)
+    #         explanation = explainer.explain(sample_index)
+    #         explainer.print_output()
+    #         explainer.plot(kind='bar')
+    #         explainer.save(sample_index)
+            
 
-    # # Global, Contrastive
-    # for samples, sparse, show_rating in samples_dict["surrogate"]:
-    #     surrogate = SurrogateModelExplanation(
-    #         X, y, model, sparse, show_rating, config
+    # # Local, Non-contrastive
+    # for samples, number_of_features, _ in samples_dict["shapley"]:
+    #     explainer = ShapExplanation(
+    #         X, y, model, number_of_features, config
     #     )
     #     for sample in samples:
     #         sample_index = map_index_to_sample(X, sample)
-    #         output = surrogate.main(sample_index, sample)
-    #         print(sparse, show_rating)
-    #         print_output(sample, output)
+    #         explanation = explainer.explain(sample_index)
+    #         explainer.print_output()
+    #         explainer.plot(sample_index, kind='bar')
+    #         explainer.save(sample_index)
+
+    # # Global, Contrastive
+    for samples, number_of_features, _ in samples_dict["surrogate"]:
+        explainer = SurrogateModelExplanation(
+            X, y, model, number_of_features, config
+        )
+        for sample in samples:
+            sample_index = map_index_to_sample(X, sample)
+            explanation = explainer.explain(sample_index)
+            explainer.print_output()
+            explainer.plot(sample_index)
+            # explainer.save(sample_index)
+            exit()
 
     # # Local, Contrastive
     # for samples, sparse, show_rating in samples_dict["counterfactual"]:

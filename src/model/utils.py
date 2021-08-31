@@ -288,44 +288,44 @@ def experiment_setup(X):
         "shapley": [
             (
                 samples[4 * samples_per_split : 5 * samples_per_split],
-                True,
+                4,
                 True,
             ),
             (
                 samples[5 * samples_per_split : 6 * samples_per_split],
-                True,
+                6,
                 False,
             ),
             (
                 samples[6 * samples_per_split : 7 * samples_per_split],
-                False,
+                8,
                 True,
             ),
             (
                 samples[7 * samples_per_split : 8 * samples_per_split],
-                False,
+                19,
                 False,
             ),
         ],
         "surrogate": [
             (
                 samples[8 * samples_per_split : 9 * samples_per_split],
-                True,
+                4,
                 True,
             ),
             (
                 samples[9 * samples_per_split : 10 * samples_per_split],
-                True,
+                6,
                 False,
             ),
             (
                 samples[10 * samples_per_split : 11 * samples_per_split],
-                False,
+                8,
                 True,
             ),
             (
                 samples[11 * samples_per_split : 12 * samples_per_split],
-                False,
+                10,
                 False,
             ),
         ],
