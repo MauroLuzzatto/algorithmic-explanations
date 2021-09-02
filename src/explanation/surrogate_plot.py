@@ -6,7 +6,6 @@ Created on Sat Dec 19 12:15:31 2020
 """
 
 import re
-
 import sklearn
 
 
@@ -43,7 +42,6 @@ class SurrogatePlot(object):
             precision=self.precision,
             class_names=self.class_names,
         )
-
         f = self.one_hot_encoding_text(f)
         return f
 
@@ -62,12 +60,15 @@ class SurrogatePlot(object):
         for value in values:
 
             if " - " in value:
+                
                 text = value.split("<=")[0].strip()
-
                 feature_name = text.split(" - ")[0]
                 feature_value = text.split(" - ")[1]
+
+                node = value.split('\\n')
                 new_text = f"{feature_name} is not {feature_value}"
-                f = f.replace(value, new_text)
+                node[0] = new_text
+                f = f.replace(value, '\n'.join(node))
 
         return f
 
@@ -98,7 +99,7 @@ class SurrogatePlot(object):
     #     # change the string via regex
     #     f = re.sub(r"(\\nsamples = \d{0,5})", "", f)
     #     f = re.sub(r"(samples = \d{0,5})", "", f)
-    #     f = re.sub(r"(\\n\\n)", "\\n", f)
+    #     # f = re.sub(r"(\\n\\n)", "\\n", f)
     #     f = re.sub(r"(\\nvalue)", "value", f)
     #     # f = re.sub(r"<=", "<", f)
     #     return f

@@ -9,15 +9,7 @@ explainy comes with four different to create either global or local, contrastive
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
 
-## Options
-Setting		|	description	|
------		|----			|
-global		|			|
-local		|			|
-contrastive	|			|
-non-contrastive	|			|
-sparse		|			|
-dense		|			|
+
 
 <!--
 
@@ -109,14 +101,39 @@ open-source software, released under the MIT license.
 
 ## Overview
 
-Method				| Implemenation 				|Type | Scope | Option|
---- 				|	--- 						| --- | --- | --- | 
-Permutation Feature Importance	|`PermutationExplanation.py`	| Non-contrastive | global |   sparse and dense |
-Shapley Values		|	`ShapleyExplanation.py`		| Non-contrastive | local |   sparse and dense |
-Global Surrogate Model|	`SurrogateModelExplanation.py`| Contrastive | global |  sparse and dense |
-Counterfactual Example|	`CounterfactualExplanation.py`| Contrastive | local |  sparse and dense |
+Method				|Type | Scope | 
+--- 				| --- | --- | 
+Permutation Feature Importance	| Non-contrastive | global |  
+Shapley Values		| Non-contrastive | local |   
+Global Surrogate Model|Contrastive | global | 
+Counterfactual Example| Contrastive | local |
 
 
+Description
+global: 
+local:
+contrastive:	
+non-contrastive:	
+
+
+
+
+## Getting Started
+
+```python
+from explainy.explanations import PermutationExplanation
+
+explainer = PermutationExplanation(
+	X=X, y=y, model=model, number_of_features=10
+)
+
+for sample_index in range(10):
+	explanation = explainer.explain(sample_index=sample_index)
+	explainer.print_output()
+	explainer.plot()
+	explainer.save(sample_index)
+
+```
 
 
 

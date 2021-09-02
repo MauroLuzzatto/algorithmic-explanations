@@ -202,10 +202,9 @@ class PermutationExplanation(ExplanationBase):
         self.feature_values = self.get_feature_values()
         
         self.sentences = self.get_sentences(self.feature_values, self.sentence_text_empty)
-        self.natural_language_text = self.get_natural_language_text(
-   )
+        self.natural_language_text = self.get_natural_language_text()
+        
         self.method_text = self.get_method_text()        
-        self.plot_name = self.get_plot_name()
         
     def save(self, sample_name):
         """
@@ -218,8 +217,10 @@ class PermutationExplanation(ExplanationBase):
             None.
 
         """
+        self.plot_name = self.get_plot_name(sample_name)    
+
         self.save_csv(sample_name)
-                
+            
         self.fig.savefig(
             os.path.join(self.path_plot, self.plot_name),
             bbox_inches="tight",

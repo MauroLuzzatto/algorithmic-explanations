@@ -7,7 +7,6 @@ import os
 from typing import Dict
 
 import graphviz
-import pandas as pd
 import numpy as np
 import warnings
 import subprocess
@@ -18,10 +17,9 @@ from sklearn.base import is_classifier, is_regressor  # type: ignore
 
 from sklearn.linear_model import LogisticRegression, LinearRegression
 
-
 from src.explanation.ExplanationBase import ExplanationBase
-from src.explanation.SurrogatePlot import SurrogatePlot
-from src.explanation.SurrogateText import SurrogateText
+from src.explanation.surrogate_plot import SurrogatePlot
+from src.explanation.surrogate_text import SurrogateText
 
 
 class SurrogateModelExplanation(ExplanationBase):
@@ -34,7 +32,7 @@ class SurrogateModelExplanation(ExplanationBase):
         X,
         y,
         model,
-        number_of_features,
+        number_of_features:int = 4,
         config: Dict = None,
         kind = 'tree'
     ):
@@ -66,19 +64,16 @@ class SurrogateModelExplanation(ExplanationBase):
         kinds = ['tree', 'linear']
         assert self.kind in kinds, f"'{self.kind}' is not a valid option, select from {kinds}"
 
-
-        self.natural_language_text_empty = (
-            "In the automated mechanism's assignment of ratings: {}"
+        natural_language_text_empty = "The features which were most important for the predictions were as follows: {}."
+        method_text_empty = "The feature importance was calculated using a {} surrogate model. {} tree nodes are shown."
+        sentence_text_empty = "The samples got a value of {:.2f} if {}"
+        
+        
+        self.natural_language_text_empty = self.config.get(
+            "natural_language_text_empty", natural_language_text_empty
         )
-
-        self.method_text_empty = (
-            "Here is a decision tree which explains how the automated mechanism"
-            " assigned ratings. The numbers at the end show the rating (from 1"
-            " to 10) you would likely get if you were in one of these {}"
-            " groups."
-        )
-
-        self.sentence = "Applicants received an average rating of {:.2f} if {}"
+        self.method_text_empty = self.config.get("method_text_empty", method_text_empty)
+        self.sentence_text_empty = self.config.get("sentence_text_empty", sentence_text_empty)
 
 
         self.explanation_name = "surrogate"
@@ -101,13 +96,13 @@ class SurrogateModelExplanation(ExplanationBase):
         
             self.tree_surrgate(estimator, max_leaf_nodes=max_leaf_nodes)
             
-        # elif self.kind == 'linear':
-        #     if is_regressor(self.model): 
-        #         estimator = LinearRegression
-        #     elif is_classifier(self.model):
-        #         estimator = LogisticRegression
+        elif self.kind == 'linear':
+            if is_regressor(self.model): 
+                estimator = LinearRegression
+            elif is_classifier(self.model):
+                estimator = LogisticRegression
                 
-        #     self.linear_surrogate(estimator)
+            self.linear_surrogate(estimator)
 
         else:
             raise
@@ -123,6 +118,18 @@ class SurrogateModelExplanation(ExplanationBase):
        
         
     def tree_surrgate(self, estimator, max_leaf_nodes, **kwargs):
+        """
+        
+
+        Args:
+            estimator (TYPE): DESCRIPTION.
+            max_leaf_nodes (TYPE): DESCRIPTION.
+            **kwargs (TYPE): DESCRIPTION.
+
+        Returns:
+            None.
+
+        """
         
         self.surrogate_model = estimator(
             max_depth=self.number_of_features, 
@@ -130,16 +137,24 @@ class SurrogateModelExplanation(ExplanationBase):
         )
                 
     def linear_surrogate(self, estimator, **kwargs):
+        """
         
+
+        Args:
+            estimator (TYPE): DESCRIPTION.
+            **kwargs (TYPE): DESCRIPTION.
+
+        Returns:
+            None.
+
+        """
         self.surrogate_model = estimator(
             **kwargs
         )
         
         
-        
     def plot(self, index_sample=None, **kwargs):
         
-        print(kwargs)
         if self.kind == 'tree':
             self.plot_tree(index_sample, **kwargs)
         elif self.kind == 'linear':
@@ -147,8 +162,7 @@ class SurrogateModelExplanation(ExplanationBase):
         
             
     def plot_bar(self, sample_index):
-        # TODO
-        pass
+        raise NotImplementedError('to be done')
             
 
     def plot_tree(self, sample_index=None, precision=2, **kwargs):
@@ -195,7 +209,8 @@ class SurrogateModelExplanation(ExplanationBase):
             None.
         """
         return self.method_text_empty.format(
-            self.num_to_str[self.number_of_groups]
+            self.surrogate_model.__class__.__name__,
+            self.num_to_str[self.number_of_groups].capitalize()
         )
 
     def get_natural_language_text(self):
@@ -207,7 +222,7 @@ class SurrogateModelExplanation(ExplanationBase):
             None.
         """
         surrogateText = SurrogateText(
-            text=self.sentence,
+            text=self.sentence_text_empty,
             model=self.surrogate_model,
             X=self.X,
             feature_names=self.feature_names,

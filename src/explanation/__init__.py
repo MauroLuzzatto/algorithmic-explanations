@@ -1,8 +1,8 @@
 # from src.explanation.ExplanationBase import Explanation
 from src.explanation.shap_explanation import ShapExplanation
-from src.explanation.CounterfactualExplanation import CounterfactualExplanation
+from src.explanation.counterfactual_explanation import CounterfactualExplanation
 
 from src.explanation.permutation_explanation import PermutationExplanation
-from src.explanation.SurrogateModelExplanation import SurrogateModelExplanation
+from src.explanation.surrogate_model_explanation import SurrogateModelExplanation
 
 from src.explanation.ControlGroupExplanation import ControlGroupExplanation

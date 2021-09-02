@@ -145,7 +145,7 @@ class SurrogateText(ExplanationMixin):
                         text = f"{feature_name}' was not '{feature_value}'"
                     else:
                         text = (
-                            f"'{feature_name_per_node}' was less than"
+                            f"'{feature_name_per_node}' was less or equal than"
                             f" {self.threshold[node]:.2f}"
                         )
                 else:

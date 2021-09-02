@@ -36,14 +36,12 @@ class CounterfactualExplanation(ExplanationBase):
         X: pd.DataFrame,
         y: np.array,
         model: sklearn.base.BaseEstimator,
-        sparse: bool,
-        show_rating: bool = True,
+        number_of_features:int = 4,
         config: Dict = None,
-        save: bool = True,
-        y_desired: float = None,
+        y_desired: float = None
     ) -> None:
         super(CounterfactualExplanation, self).__init__(
-            sparse, show_rating, save, config
+           config
         )
         """
         Init the specific explanation class, the base class is "Explanation"
@@ -52,9 +50,7 @@ class CounterfactualExplanation(ExplanationBase):
             X (df): (Test) samples and features to calculate the importance for (sample, features)
             y (np.array): (Test) target values of the samples (samples, 1)
             model (object): trained (sckit-learn) model object
-            sparse (bool): boolean value to generate sparse or non sparse explanation
-            show_rating
-            save (bool, optional): boolean value to save the plots. Defaults to True.
+            number_of_features (int): 
             y_desired (float, optional): desired target value for the counter factual example. 
                 Defaults to max(y).
         
@@ -64,46 +60,37 @@ class CounterfactualExplanation(ExplanationBase):
         """
         self.X = X
         self.y = y
-
-        self.natural_language_text_empty = (
-            "In your case, the automated mechanism would have likely awarded"
-            " you the scholarship {}."
-        )
-
-        self.method_text_empty = (
-            "Here are {} important attributes from your application which, if"
-            " changed, would have altered the decision made by the automated"
-            " mechanism in your case. If your application had changed to the"
-            " one on the right ('The Winning You'),"
-        )
-
-        if self.show_rating:
-            self.method_text_empty = " ".join(
-                [
-                    self.method_text_empty,
-                    "your rating would have increased to {:.1f}.",
-                ]
-            )
-        else:
-            self.method_text_empty = " ".join(
-                [
-                    self.method_text_empty,
-                    "you would have likely won the scholarship.",
-                ]
-            )
-
+        
         if y_desired is None:
             y_desired = y.values.max()
 
         self.y_desired = y_desired
         self.model = model
-
         self.feature_names = list(X)
-        self.num_features = self.sparse_to_num_features()
+        self.number_of_features = number_of_features
+
+        natural_language_text_empty = (
+            "In your case, the automated mechanism would have likely awarded"
+            " you the scholarship {}."
+        )
+
+ 
+        method_text_empty = (
+            " The feature importance was calculated using a counterfactual sample. With the listed attributes the target value would have been reached."
+        )
+        
+        self.natural_language_text_empty = self.config.get(
+            "natural_language_text_empty", natural_language_text_empty
+        )
+        self.method_text_empty = self.config.get("method_text_empty", method_text_empty)
+      
+
         self.explanation_name = "counterfactual"
         self.logger = self.setup_logger(self.explanation_name)
+        
+        self.delta = self.config.get("delta", 1.0)
 
-    def calculate_explanation(self, sample=0, lammbda=1.0):
+    def _calculate_importance(self, sample=0, delta=1.0):
         """
         Create the counter factual explanation for the given sample.
 
@@ -119,156 +106,73 @@ class CounterfactualExplanation(ExplanationBase):
 
         x_ref = self.X.values[sample, :]
 
-        # TODO: add the best example
-        if self.prediction >= 8:
-            x_counter_factual = np.array(
-                [
-                    5.0,
-                    4.0,
-                    3.9,
-                    34.0,
-                    1540.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    9.5,
-                ]
+        count = 0
+        for lammbda in np.arange(0, 10000, 0.1):
+
+            x_counter_factual = create_counterfactual(
+                x_reference=x_ref,
+                y_desired=self.y_desired,
+                model=self.model,
+                X_dataset=self.X.values,
+                y_desired_proba=None,
+                lammbda=lammbda,
             )
 
-            y_counter_factual = self.model.predict(
+            self.y_counter_factual = self.model.predict(
                 x_counter_factual.reshape(1, -1)
             )[0]
-            lammbda = None
 
-        else:
+            self.log_counterfactual(lammbda)
 
-            for lammbda in np.arange(0, 10000, 0.1):
+            if np.abs(self.y_counter_factual - self.y_desired) < delta:
+                break
+            
+            if count > 100:
+                raise
+                
+            count+=1
 
-                x_counter_factual = create_counterfactual(
-                    x_reference=x_ref,
-                    y_desired=self.y_desired,
-                    model=self.model,
-                    X_dataset=self.X.values,
-                    y_desired_proba=None,
-                    lammbda=lammbda,
-                )
-
-                y_counter_factual = self.model.predict(
-                    x_counter_factual.reshape(1, -1)
-                )[0]
-
-                self.logger.info(f"lambda: {lammbda}")
-                self.logger.info(
-                    f"diff:  {np.abs(y_counter_factual - self.y_desired)}"
-                )
-                self.logger.info(
-                    f"y_counterfactual: {y_counter_factual:.2f}, desired:"
-                    f" {self.y_desired:.2f}, y_pred {self.prediction:.2f}"
-                )
-                self.logger.info("---" * 15)
-
-                if (
-                    not np.abs(y_counter_factual - self.y_desired) > 1.0
-                    and (y_counter_factual - self.prediction) > 0.4
-                ):
-                    break
-
-        self.logger.info(f"final lambda: {lammbda}")
-        self.logger.info(
-            f"final diff:  {np.abs(y_counter_factual - self.y_desired)}"
-        )
-        self.logger.info(
-            f"y_counterfactual: {y_counter_factual}, desired: {self.y_desired},"
-            f" y_pred {self.prediction}"
-        )
-        self.y_counter_factual = y_counter_factual
-
+        self.logger.info('\nFinal Lambda:')
+        self.log_counterfactual(lammbda)        
         self.log_output(sample, x_ref, x_counter_factual)
         return x_ref, x_counter_factual
+    
+    def log_counterfactual(self, lammbda):
+        """
+        
 
+        Args:
+            lammbda (TYPE): DESCRIPTION.
+
+        Returns:
+            None.
+
+        """
+        
+        self.logger.info(f"lambda: {lammbda}")
+        self.logger.info(
+            f"diff: {np.abs(self.y_counter_factual - self.y_desired)}"
+        )
+        self.logger.info(
+            f"y_counterfactual: {self.y_counter_factual:.2f}, desired:"
+            f" {self.y_desired:.2f}, y_pred {self.prediction:.2f}"
+        )
+        self.logger.info("---" * 15)
+
+        
     def log_output(self, sample, x_ref, x_counter_factual):
+        """
+        
+
+        Args:
+            sample (TYPE): DESCRIPTION.
+            x_ref (TYPE): DESCRIPTION.
+            x_counter_factual (TYPE): DESCRIPTION.
+
+        Returns:
+            None.
+
+        """
 
         self.logger.info("True label: {}".format(self.y.values[sample]))
         self.logger.info(
@@ -395,7 +299,7 @@ class CounterfactualExplanation(ExplanationBase):
             None.
 
         """
-        for feature_name in list(self.df.index)[: self.num_features]:
+        for feature_name in list(self.df.index)[: self.number_of_features]:
             for col_name in ["Reference Values", "Counter Factual Values"]:
 
                 feature_value = self.df.loc[feature_name, col_name]
@@ -416,7 +320,7 @@ class CounterfactualExplanation(ExplanationBase):
 
                     self.df.loc[feature_name, col_name] = string
 
-    def plot(self):
+    def plot(self, show_rating=False):
         """
         Plot the table comparing the refence and the counter factual values
 
@@ -424,14 +328,14 @@ class CounterfactualExplanation(ExplanationBase):
             None.
         """
 
-        colLabels = ["You", "The Winning You"]
+        colLabels = ["Sample", "Counterfactual Values"]
         columns = ["Reference Values", "Counter Factual Values"]
 
         self.format_features_for_plot()
-        array_subset = self.df[columns].values[: self.num_features]
-        rowLabels = list(self.df.index)[: self.num_features]
+        array_subset = self.df[columns].values[: self.number_of_features]
+        rowLabels = list(self.df.index)[: self.number_of_features]
 
-        if self.show_rating:
+        if show_rating:
             score_row = np.array(
                 [f"{self.prediction:.1f}", f"{self.y_counter_factual:.1f}"]
             ).reshape(1, -1)
@@ -454,7 +358,8 @@ class CounterfactualExplanation(ExplanationBase):
         table.set_fontsize(12)
         table.scale(1.25, 2)
 
-        if self.show_rating:
+        if show_rating:
+
             # make the last row bold
             for (row, col), cell in table.get_celld().items():
                 if row == array_subset.shape[0]:
@@ -473,15 +378,20 @@ class CounterfactualExplanation(ExplanationBase):
         points[1, :] += 10
 
         # get new bounding box in inches
-        nbbox = matplotlib.transforms.Bbox.from_extents(points / plt.gcf().dpi)
-
-        if self.save:
-            fig.savefig(
+        self.nbbox = matplotlib.transforms.Bbox.from_extents(points / plt.gcf().dpi)
+        plt.show(block=True)
+        return fig
+    
+    def save(self, sample_index, sample_name):
+        
+        self.save_csv(sample_name)
+        
+        self.fig.savefig(
                 os.path.join(self.path_plot, self.plot_name),
-                bbox_inches=nbbox,
+                bbox_inches=self.nbbox,
             )
 
-        plt.show(block=True)
+
 
     def get_method_text(self):
         """
@@ -491,7 +401,7 @@ class CounterfactualExplanation(ExplanationBase):
             None.
         """
         return self.method_text_empty.format(
-            self.num_to_str[self.num_features], self.y_counter_factual
+            self.num_to_str[self.number_of_features], self.y_counter_factual
         )
 
     def get_natural_language_text(self):
@@ -503,9 +413,9 @@ class CounterfactualExplanation(ExplanationBase):
             None.
         """
         feature_values = self.df["Counter Factual Values"].tolist()[
-            : self.num_features
+            : self.number_of_features
         ]
-        feature_names = list(self.df.index)[: self.num_features]
+        feature_names = list(self.df.index)[: self.number_of_features]
 
         sentence = "your '{}' was {}"
 
@@ -556,8 +466,23 @@ class CounterfactualExplanation(ExplanationBase):
             sentence_filled = sentence.format(column, f"not '{value}'")
 
         return sentence_filled
+    
+    
+    def _setup(self, sample_index, sample_name):
+        
+        
+        self.get_prediction(sample_index)
 
-    def main(self, sample_index, sample):
+        x_ref, x_counter_factual = self._calculate_importance(sample_index, delta=self.delta)
+        self.get_feature_importance(x_ref, x_counter_factual)
+        self.get_feature_values(x_ref, x_counter_factual)
+        self.natural_language_text = self.get_natural_language_text()
+        self.method_text = self.get_method_text()
+        
+        # todo: move to save?
+        self.plot_name = self.get_plot_name(sample_name)
+
+    def explain(self, sample_index, sample_name=None, separator='\n'):
         """
         main function to create the explanation of the given sample. The
         method_text, natural_language_text and the plots are create per sample.
@@ -568,49 +493,12 @@ class CounterfactualExplanation(ExplanationBase):
         Returns:
             None.
         """
+        if not sample_name:
+            sample_name = sample_index
+            
+        self._setup(sample_index, sample_name)
 
-        self.get_prediction(sample_index)
+        self.score_text = self.get_score_text()
+        self.explanation =  self.get_explanation(separator)
+        return self.explanation
 
-        x_ref, x_counter_factual = self.calculate_explanation(sample_index)
-        self.get_feature_importance(x_ref, x_counter_factual)
-        self.get_feature_values(x_ref, x_counter_factual)
-
-        self.natural_language_text = self.get_natural_language_text()
-        self.method_text = self.get_method_text()
-
-        self.plot_name = self.get_plot_name(sample)
-        self.plot()
-
-        self.score_text = self.get_score_text(self.num_features)
-        self.save_csv(sample)
-
-        return self.score_text, self.method_text, self.natural_language_text
-
-
-if __name__ == "__main__":
-
-    from sklearn.datasets import load_diabetes
-    from sklearn.ensemble import RandomForestRegressor
-    from sklearn.model_selection import train_test_split
-
-    diabetes = load_diabetes()
-
-    X_train, X_val, y_train, y_val = train_test_split(
-        diabetes.data, diabetes.target, random_state=0
-    )
-
-    model = RandomForestRegressor(random_state=0).fit(X_train, y_train)
-    print(model.score(X_val, y_val))
-
-    # DF, based on which importance is checked
-    X_val = pd.DataFrame(X_val, columns=diabetes.feature_names)
-
-    sparse = True
-    text = "{}"
-    X = X_val
-    y = y_val
-    sample = 10
-
-    for sparse in [0, 1]:
-        counterfactual = CounterfactualExplanation(X, y, model, sparse)
-        counterfactual.main(sample)
