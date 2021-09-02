@@ -95,28 +95,35 @@ open-source software, released under the MIT license.
 --->
 
 
-## Install explainy
+## Model Explanations
 
-
-
-## Overview
-
-Method				|Type | Scope | 
---- 				| --- | --- | 
-Permutation Feature Importance	| Non-contrastive | global |  
-Shapley Values		| Non-contrastive | local |   
-Global Surrogate Model|Contrastive | global | 
-Counterfactual Example| Contrastive | local |
+Method				|Type | Explanations | Classification | Regression | 
+--- 				| --- | --- | --- | --- | 
+[Permutation Feature Importanc](https://github.com/MauroLuzzatto)	| Non-contrastive | global |  ✔ | ✔|
+Shapley Values		| Non-contrastive | local |   ✔ | ✔|
+Global Surrogate Model|Contrastive | global | ✔ | ✔|
+Counterfactual Example| Contrastive | local |✔ | ✔|
 
 
 Description
-global: 
-local:
-contrastive:	
-non-contrastive:	
+- global: 
+- local:
+- contrastive:	
+- non-contrastive:	
 
 
 
+<!---
+
+categorical features
+
+--->
+
+## Install explainy
+
+```
+pip install explainy
+```
 
 ## Getting Started
 
@@ -124,14 +131,14 @@ non-contrastive:
 from explainy.explanations import PermutationExplanation
 
 explainer = PermutationExplanation(
-	X=X, y=y, model=model, number_of_features=10
+	X, y, model, number_of_features=10
 )
 
 for sample_index in range(10):
-	explanation = explainer.explain(sample_index=sample_index)
-	explainer.print_output()
-	explainer.plot()
-	explainer.save(sample_index)
+    explanation = explainer.explain(sample_index=sample_index)
+    explainer.print_output()
+    explainer.plot()
+    explainer.save(sample_index)
 
 ```
 

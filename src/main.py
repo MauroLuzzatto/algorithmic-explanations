@@ -129,10 +129,23 @@ for field in ["all"]:
     #         explainer.plot(sample_index, kind='bar')
     #         explainer.save(sample_index)
 
-    # # Global, Contrastive
-    for samples, number_of_features, _ in samples_dict["surrogate"]:
-        explainer = SurrogateModelExplanation(
-            X, y, model, number_of_features, config
+    # # # Global, Contrastive
+    # for samples, number_of_features, _ in samples_dict["surrogate"]:
+    #     explainer = SurrogateModelExplanation(
+    #         X, y, model, 10, config
+    #     )
+    #     for sample in samples:
+    #         sample_index = map_index_to_sample(X, sample)
+    #         explanation = explainer.explain(sample_index)
+    #         explainer.print_output()
+    #         explainer.plot(sample_index)
+    #         # explainer.save(sample_index)
+    #         exit()
+
+    # Local, Contrastive
+    for samples, number_of_features, _ in samples_dict["counterfactual"]:
+        explainer = CounterfactualExplanation(
+            X, y, model, number_of_features, config, y_desired=8.0
         )
         for sample in samples:
             sample_index = map_index_to_sample(X, sample)
@@ -140,15 +153,3 @@ for field in ["all"]:
             explainer.print_output()
             explainer.plot(sample_index)
             # explainer.save(sample_index)
-            exit()
-
-    # # Local, Contrastive
-    # for samples, sparse, show_rating in samples_dict["counterfactual"]:
-    #     counterfactual = CounterfactualExplanation(
-    #         X, y, model, sparse, show_rating, config, y_desired=8.0
-    #     )
-    #     for sample in samples:
-    #         sample_index = map_index_to_sample(X, sample)
-    #         output = counterfactual.main(sample_index, sample)
-    #         print(sparse, show_rating)
-    #         print_output(sample, output)

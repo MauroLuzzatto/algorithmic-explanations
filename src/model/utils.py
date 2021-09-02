@@ -332,22 +332,22 @@ def experiment_setup(X):
         "counterfactual": [
             (
                 samples[12 * samples_per_split : 13 * samples_per_split],
-                True,
+                4,
                 True,
             ),
             (
                 samples[13 * samples_per_split : 14 * samples_per_split],
-                True,
+                6,
                 False,
             ),
             (
                 samples[14 * samples_per_split : 15 * samples_per_split],
-                False,
+                8,
                 True,
             ),
             (
                 samples[15 * samples_per_split : 16 * samples_per_split],
-                False,
+                10,
                 False,
             ),
         ],
