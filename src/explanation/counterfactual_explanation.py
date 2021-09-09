@@ -70,20 +70,22 @@ class CounterfactualExplanation(ExplanationBase):
         self.number_of_features = number_of_features
 
         natural_language_text_empty = (
-            "In your case, the automated mechanism would have likely awarded"
-            " you the scholarship {}."
+            "The sample would have had the desired prediction, {}."
         )
 
- 
         method_text_empty = (
-            " The feature importance was calculated using a counterfactual sample. With the listed attributes the target value would have been reached."
+            "The feature importance is shown using a counterfactual example."
         )
+        
+        sentence_text_empty = "the '{}' was {}"
+
         
         self.natural_language_text_empty = self.config.get(
             "natural_language_text_empty", natural_language_text_empty
         )
         self.method_text_empty = self.config.get("method_text_empty", method_text_empty)
-      
+        self.sentence_text_empty = self.config.get("sentence_text_empty", sentence_text_empty)
+
 
         self.explanation_name = "counterfactual"
         self.logger = self.setup_logger(self.explanation_name)
@@ -392,7 +394,6 @@ class CounterfactualExplanation(ExplanationBase):
             )
 
 
-
     def get_method_text(self):
         """
         Define the method introduction text of the explanation type.
@@ -417,8 +418,6 @@ class CounterfactualExplanation(ExplanationBase):
         ]
         feature_names = list(self.df.index)[: self.number_of_features]
 
-        sentence = "your '{}' was {}"
-
         sentences = []
         for feature_name, feature_value in zip(feature_names, feature_values):
             feature_value = self.map_category(feature_name, feature_value)
@@ -426,11 +425,11 @@ class CounterfactualExplanation(ExplanationBase):
             # handle one-hot encoding case
             if " - " in feature_name:
                 sentence_filled = self.create_one_hot_sentence(
-                    feature_name, feature_value, sentence
+                    feature_name, feature_value, self.sentence_text_empty
                 )
                 mode = "one-hot feature"
             else:
-                sentence_filled = sentence.format(
+                sentence_filled =  self.sentence_text_empty.format(
                     feature_name, f"'{feature_value}'"
                 )
                 mode = "standard feature"

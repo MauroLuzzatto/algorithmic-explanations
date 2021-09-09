@@ -6,6 +6,9 @@ explainy is a library for generating explanations for machine learning models in
 
 explainy comes with four different to create either global or local, contrastive or non-contrastive and dense or sparse machine learning model explanations.
 
+[![pypi version](https://img.shields.io/pypi/v/explainy.svg)](https://pypi.python.org/pypi/explainy)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
 
@@ -95,21 +98,6 @@ open-source software, released under the MIT license.
 --->
 
 
-## Model Explanations
-
-Method				|Type | Explanations | Classification | Regression | 
---- 				| --- | --- | --- | --- | 
-[Permutation Feature Importanc](https://github.com/MauroLuzzatto)	| Non-contrastive | global |  ✔ | ✔|
-Shapley Values		| Non-contrastive | local |   ✔ | ✔|
-Global Surrogate Model|Contrastive | global | ✔ | ✔|
-Counterfactual Example| Contrastive | local |✔ | ✔|
-
-
-Description
-- global: 
-- local:
-- contrastive:	
-- non-contrastive:	
 
 
 
@@ -125,7 +113,7 @@ categorical features
 pip install explainy
 ```
 
-## Getting Started
+## Usage
 
 ```python
 from explainy.explanations import PermutationExplanation
@@ -141,6 +129,25 @@ for sample_index in range(10):
     explainer.save(sample_index)
 
 ```
+
+
+
+## Model Explanations
+
+Method				|Type | Explanations | Classification | Regression | 
+--- 				| --- | --- | :---: | :---: | 
+[Permutation Feature Importance](https://github.com/MauroLuzzatto)	| Non-contrastive | global |  :star: | :star:|
+Shapley Values		| Non-contrastive | local |   :star: | :star:|
+Global Surrogate Model|Contrastive | global | :star: | :star:|
+Counterfactual Example| Contrastive | local |:star: | :star:|
+
+
+Description
+- global: 
+- local:
+- contrastive:	
+- non-contrastive:	
+
 
 
 

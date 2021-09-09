@@ -48,7 +48,7 @@ class ExplanationBase(ABC, ExplanationMixin):
         self.get_number_to_string_dict()
         
         score_text_empty = (
-            "The {} used {} features to produce the predictions. The prediction of this sample was {:.1f}."
+            "The {} used {} dataset features to produce the predictions. The prediction of this sample was {:.1f}."
         )
         self.score_text_empty = self.config.get("score_text_empty", score_text_empty)
 
@@ -164,13 +164,13 @@ class ExplanationBase(ABC, ExplanationMixin):
     def get_model_text(self):
         return str(self.model)
 
-    def get_plot_name(self, sample=None):
+    def get_plot_name(self, sample_name=None):
 
-        if sample:
-            plot_name = f"{self.explanation_name}_sample_{sample}_sparse_{self.number_of_features}.png"
+        if sample_name:
+            plot_name = f"{self.explanation_name}_sample_{sample_name}_features_{self.number_of_features}.png"
         else:
             plot_name = (
-                f"{self.explanation_name}_sparse_{self.number_of_features}.png"
+                f"{self.explanation_name}_features_{self.number_of_features}.png"
             )
         return plot_name
     
